@@ -6,9 +6,8 @@ import SlideToEnterButton from './SlideToEnterButton'
 
 const BANNER_FALLBACK = {
   imagen: '',
-  titulo: 'Bienvenida a Yeral fancy',
-  subtitulo: 'Accesorios elegantes para cada ocasión.',
   botonTexto: 'Desliza para entrar',
+  corHint: '#ffffff',
 }
 
 export default function PWAIntroScreen({ onEntrar }) {
@@ -124,34 +123,12 @@ export default function PWAIntroScreen({ onEntrar }) {
             </div>
           )}
 
-          {/* Textos del banner */}
-          <motion.div
-            key={`texto-${indice}`}
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="space-y-2"
-          >
-            {banner.titulo && (
-              <h1
-                className="text-white font-display font-bold leading-tight"
-                style={{ fontSize: 'clamp(1.35rem, 5.5vw, 1.85rem)' }}
-              >
-                {banner.titulo}
-              </h1>
-            )}
-            {banner.subtitulo && (
-              <p className="text-white/65 text-sm leading-relaxed">
-                {banner.subtitulo}
-              </p>
-            )}
-          </motion.div>
-
           {/* Hint animado */}
           <motion.p
-            className="text-white/38 text-xs text-center tracking-widest uppercase select-none"
+            className="text-xs text-center tracking-widest uppercase select-none"
+            style={{ color: banner.corHint || '#ffffff', opacity: 0.7 }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: 0.7 }}
             transition={{ duration: 0.6, delay: 0.5 }}
           >
             Desliza para descubrir

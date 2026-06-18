@@ -22,15 +22,17 @@ ON CONFLICT (id) DO NOTHING;
 -- ─────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS public.pwa_intro_banners (
-  id         text        PRIMARY KEY,
-  imagen     text        NOT NULL DEFAULT '',
-  titulo     text        NOT NULL DEFAULT '',
-  subtitulo  text        NOT NULL DEFAULT '',
-  boton_texto text       NOT NULL DEFAULT 'Desliza para entrar',
-  activo     boolean     NOT NULL DEFAULT true,
-  orden      integer     NOT NULL DEFAULT 1,
-  created_at timestamptz NOT NULL DEFAULT now()
+  id          text        PRIMARY KEY,
+  imagen      text        NOT NULL DEFAULT '',
+  boton_texto text        NOT NULL DEFAULT 'Desliza para entrar',
+  cor_hint    text        NOT NULL DEFAULT '#ffffff',
+  activo      boolean     NOT NULL DEFAULT true,
+  orden       integer     NOT NULL DEFAULT 1,
+  created_at  timestamptz NOT NULL DEFAULT now()
 );
+
+-- Se a tabela já existir de uma versão anterior, adiciona as colunas que faltam
+ALTER TABLE public.pwa_intro_banners ADD COLUMN IF NOT EXISTS cor_hint text NOT NULL DEFAULT '#ffffff';
 
 ALTER TABLE public.pwa_intro_banners ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "anon_all_pwa_intro_banners" ON public.pwa_intro_banners;

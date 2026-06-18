@@ -12,9 +12,8 @@ const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 
 const BANNER_VACIO = {
   imagen: '',
-  titulo: '',
-  subtitulo: '',
   botonTexto: 'Desliza para entrar',
+  corHint: '#ffffff',
   activo: true,
   orden: 1,
 }
@@ -94,25 +93,6 @@ function FormBanner({ datos, setDatos, onGuardar, onCancelar }) {
     <div className="space-y-4">
       <SelectorImagen urlActual={datos.imagen} onCambio={url => setDatos(d => ({ ...d, imagen: url }))} />
       <div>
-        <label className="etiqueta">Título</label>
-        <input
-          value={datos.titulo}
-          onChange={e => setDatos(d => ({ ...d, titulo: e.target.value }))}
-          className="input-campo"
-          placeholder="Descubre accesorios que elevan tu estilo"
-        />
-      </div>
-      <div>
-        <label className="etiqueta">Subtítulo</label>
-        <textarea
-          value={datos.subtitulo}
-          onChange={e => setDatos(d => ({ ...d, subtitulo: e.target.value }))}
-          className="input-campo resize-none"
-          rows={2}
-          placeholder="Colecciones elegantes, detalles únicos…"
-        />
-      </div>
-      <div>
         <label className="etiqueta">Texto del botón</label>
         <input
           value={datos.botonTexto}
@@ -120,6 +100,19 @@ function FormBanner({ datos, setDatos, onGuardar, onCancelar }) {
           className="input-campo"
           placeholder="Desliza para entrar"
         />
+      </div>
+      <div>
+        <label className="etiqueta">Color del texto de indicación</label>
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            value={datos.corHint || '#ffffff'}
+            onChange={e => setDatos(d => ({ ...d, corHint: e.target.value }))}
+            className="w-10 h-10 rounded-lg cursor-pointer border border-marca-beige-borde bg-transparent"
+          />
+          <span className="text-sm text-marca-texto-suave font-mono">{datos.corHint || '#ffffff'}</span>
+          <span className="text-xs text-marca-texto-suave">Texto "Desliza para descubrir"</span>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -181,13 +174,10 @@ function VistaPrevia({ banner, config }) {
             <div className="w-4 h-1 rounded-full bg-marca-dorado/80" />
             <div className="w-1.5 h-1 rounded-full bg-white/30" />
           </div>
-          {banner?.titulo && (
-            <p className="text-white font-bold text-[9px] leading-tight line-clamp-2">{banner.titulo}</p>
-          )}
-          {banner?.subtitulo && (
-            <p className="text-white/60 text-[7px] leading-tight line-clamp-2">{banner.subtitulo}</p>
-          )}
-          <p className="text-white/30 text-[6px] text-center tracking-widest uppercase">Desliza para descubrir</p>
+          <p
+            className="text-[6px] text-center tracking-widest uppercase"
+            style={{ color: banner?.corHint || '#ffffff', opacity: 0.7 }}
+          >Desliza para descubrir</p>
           {/* Botón simulado */}
           <div
             className="flex items-center rounded-full overflow-hidden"

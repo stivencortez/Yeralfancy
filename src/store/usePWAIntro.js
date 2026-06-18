@@ -12,9 +12,8 @@ function bannerDeDB(row) {
   return {
     id: row.id,
     imagen: row.imagen || '',
-    titulo: row.titulo || '',
-    subtitulo: row.subtitulo || '',
     botonTexto: row.boton_texto || 'Desliza para entrar',
+    corHint: row.cor_hint || '#ffffff',
     activo: row.activo !== false,
     orden: row.orden || 0,
     creadoEn: row.created_at,
@@ -25,9 +24,8 @@ function bannerParaDB(obj) {
   return {
     id: obj.id,
     imagen: obj.imagen || '',
-    titulo: obj.titulo || '',
-    subtitulo: obj.subtitulo || '',
     boton_texto: obj.botonTexto || 'Desliza para entrar',
+    cor_hint: obj.corHint || '#ffffff',
     activo: obj.activo !== false,
     orden: obj.orden || 0,
   }
