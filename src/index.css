@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-marca-fondo text-marca-texto;
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-marca-beige;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-marca-marron rounded-full;
+  }
+
+  input, textarea, select {
+    outline: none;
+  }
+}
+
+@layer components {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .contenedor {
+    @apply max-w-7xl mx-auto px-4;
+  }
+
+  .tarjeta {
+    @apply bg-white rounded-2xl shadow-tarjeta;
+  }
+
+  .btn-primario {
+    @apply bg-marca-negro text-white font-semibold px-6 py-3 rounded-xl
+           active:scale-95 transition-all duration-150 cursor-pointer
+           hover:bg-marca-marron-oscuro select-none;
+  }
+
+  .btn-secundario {
+    @apply bg-marca-beige text-marca-marron-oscuro font-semibold px-6 py-3 rounded-xl
+           active:scale-95 transition-all duration-150 cursor-pointer
+           hover:bg-marca-beige-borde select-none;
+  }
+
+  .btn-outline {
+    @apply bg-transparent text-marca-negro font-semibold px-6 py-3 rounded-xl
+           border border-marca-beige-borde active:scale-95 transition-all duration-150
+           cursor-pointer hover:border-marca-marron hover:text-marca-marron select-none;
+  }
+
+  .input-campo {
+    @apply w-full bg-marca-beige border border-marca-beige-borde rounded-xl px-4 py-3
+           text-marca-texto placeholder-marca-texto-suave
+           focus:border-marca-marron focus:bg-white
+           transition-all duration-200;
+  }
+
+  .etiqueta {
+    @apply block text-sm font-medium text-marca-texto mb-1.5;
+  }
+
+  .scroll-horizontal {
+    @apply flex gap-3 overflow-x-auto pb-2;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scroll-horizontal::-webkit-scrollbar {
+    display: none;
+  }
+
+  .linea-divisora {
+    @apply h-px bg-marca-beige-borde;
+  }
+
+  .badge-estado {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .shimmer-bg {
+    background: linear-gradient(90deg, #f5efe0 25%, #e8d8c0 50%, #f5efe0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
