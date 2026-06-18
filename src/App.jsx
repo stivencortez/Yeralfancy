@@ -25,6 +25,7 @@ import Clientes from './pages/admin/Clientes'
 import Metricas from './pages/admin/Metricas'
 import Configuracion from './pages/admin/Configuracion'
 import PWAIntro from './pages/admin/PWAIntro'
+import ImportarExcel from './pages/admin/ImportarExcel'
 
 export default function App() {
   return (
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="clientes" element={<Clientes />} />
           <Route path="metricas" element={<Metricas />} />
           <Route path="configuracion" element={<Configuracion />} />
+          <Route path="importar-excel" element={<ImportarExcel />} />
         </Route>
       </Routes>
     </>
