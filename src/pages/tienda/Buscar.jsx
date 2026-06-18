@@ -29,7 +29,7 @@ export default function Buscar() {
         p.nombre?.toLowerCase().includes(termino.toLowerCase()) ||
         p.descripcion?.toLowerCase().includes(termino.toLowerCase())
       )
-    : []
+    : productos
 
   return (
     <div className="contenedor py-5 animate-fade-in">
@@ -63,15 +63,15 @@ export default function Buscar() {
         </div>
       </form>
 
-      {termino && (
-        <p className="text-sm text-marca-texto-suave mb-5">
+      {termino ? (
+        <p className="text-sm text-marca-texto-suave mb-4">
           {resultados.length} resultado{resultados.length !== 1 ? 's' : ''} para <span className="font-semibold text-marca-negro">"{termino}"</span>
         </p>
+      ) : (
+        <p className="text-sm text-marca-texto-suave mb-4">{productos.length} productos</p>
       )}
 
-      {!termino ? (
-        <EstadoVacio icono="🔍" titulo="Escribe para buscar" descripcion="Usa la barra de búsqueda para encontrar productos." />
-      ) : resultados.length === 0 ? (
+      {resultados.length === 0 ? (
         <EstadoVacio
           icono="😔"
           titulo="Sin resultados"
