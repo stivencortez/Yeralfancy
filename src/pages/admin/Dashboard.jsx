@@ -6,6 +6,7 @@ import { usePedidos } from '../../store/usePedidos'
 import { useClientes } from '../../store/useClientes'
 import { formatearPrecio, estadoColor, formatearFechaHora } from '../../utils/formatear'
 import { Link } from 'react-router-dom'
+import { useAdminModoOscuro } from '../../layouts/LayoutAdmin'
 
 const FILTROS = ['Hoy', 'Esta semana', 'Este mes']
 
@@ -42,6 +43,10 @@ function calcularRangos(filtro) {
 
 export default function Dashboard() {
   const [filtro, setFiltro] = useState('Este mes')
+  const { modoOscuro } = useAdminModoOscuro()
+  const grafColor = modoOscuro
+    ? { grid: '#374151', tick: '#9ca3af', border: '#374151' }
+    : { grid: '#F5EFE0', tick: '#7A6B5E', border: '#E8D8C0' }
   const productos = useProductos(s => s.productos)
   const pedidos = usePedidos(s => s.pedidos)
   const clientes = useClientes(s => s.clientes)
@@ -149,12 +154,12 @@ export default function Dashboard() {
                 <stop offset="95%" stopColor="#9B7B5B" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F5EFE0" />
-            <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#7A6B5E' }} />
-            <YAxis tick={{ fontSize: 11, fill: '#7A6B5E' }} />
+            <CartesianGrid strokeDasharray="3 3" stroke={grafColor.grid} />
+            <XAxis dataKey="dia" tick={{ fontSize: 11, fill: grafColor.tick }} />
+            <YAxis tick={{ fontSize: 11, fill: grafColor.tick }} />
             <Tooltip
               formatter={(v) => [formatearPrecio(v), 'Ventas']}
-              contentStyle={{ borderRadius: 12, border: '1px solid #E8D8C0', boxShadow: 'none', fontSize: 12 }}
+              contentStyle={{ borderRadius: 12, border: `1px solid ${grafColor.border}`, boxShadow: 'none', fontSize: 12, backgroundColor: modoOscuro ? '#1f2937' : '#fff', color: modoOscuro ? '#f9fafb' : '#1C1C1C' }}
             />
             <Area type="monotone" dataKey="ventas" stroke="#9B7B5B" strokeWidth={2} fill="url(#colorVentas)" />
           </AreaChart>

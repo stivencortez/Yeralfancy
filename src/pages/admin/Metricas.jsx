@@ -2,10 +2,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useProductos } from '../../store/useProductos'
 import { usePedidos } from '../../store/usePedidos'
 import { formatearPrecio } from '../../utils/formatear'
+import { useAdminModoOscuro } from '../../layouts/LayoutAdmin'
 
 const COLORES = ['#9B7B5B', '#C9A96E', '#B89070', '#7A5C3A', '#D4B896', '#E8C9A0', '#6B4C2A']
 
 export default function Metricas() {
+  const { modoOscuro } = useAdminModoOscuro()
+  const grafColor = modoOscuro
+    ? { grid: '#374151', tick: '#9ca3af', border: '#374151', bg: '#1f2937', text: '#f9fafb' }
+    : { grid: '#F5EFE0', tick: '#7A6B5E', border: '#E8D8C0', bg: '#fff', text: '#1C1C1C' }
   const productos = useProductos(s => s.productos)
   const pedidos = usePedidos(s => s.pedidos)
 
@@ -55,12 +60,12 @@ export default function Metricas() {
           <h2 className="font-semibold text-sm text-marca-negro mb-4">Ranking de ventas</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={datosRanking} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#F5EFE0" />
-              <XAxis type="number" tick={{ fontSize: 10, fill: '#7A6B5E' }} />
-              <YAxis type="category" dataKey="nombre" tick={{ fontSize: 10, fill: '#7A6B5E' }} width={80} />
+              <CartesianGrid strokeDasharray="3 3" stroke={grafColor.grid} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: grafColor.tick }} />
+              <YAxis type="category" dataKey="nombre" tick={{ fontSize: 10, fill: grafColor.tick }} width={80} />
               <Tooltip
                 formatter={(v, n) => [n === 'vendidos' ? `${v} uds` : formatearPrecio(v), n === 'vendidos' ? 'Vendidos' : 'Ganancia']}
-                contentStyle={{ borderRadius: 12, border: '1px solid #E8D8C0', fontSize: 11 }}
+                contentStyle={{ borderRadius: 12, border: `1px solid ${grafColor.border}`, fontSize: 11, backgroundColor: grafColor.bg, color: grafColor.text }}
               />
               <Bar dataKey="vendidos" fill="#9B7B5B" radius={[0, 4, 4, 0]} />
             </BarChart>
@@ -76,7 +81,7 @@ export default function Metricas() {
                   <Pie data={estadosPedidos} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
                     {estadosPedidos.map((_, i) => <Cell key={i} fill={COLORES[i % COLORES.length]} />)}
                   </Pie>
-                  <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #E8D8C0', fontSize: 11 }} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: `1px solid ${grafColor.border}`, fontSize: 11, backgroundColor: grafColor.bg, color: grafColor.text }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-2 mt-2 justify-center">

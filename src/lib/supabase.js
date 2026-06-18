@@ -113,6 +113,17 @@ export const clienteParaDB = (obj) => ({
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
+export const subirImagenLogo = async (archivo) => {
+  const ext = archivo.name.split('.').pop()
+  const nombre = `logo_${Date.now()}.${ext}`
+  const { data, error } = await supabase.storage
+    .from('logos')
+    .upload(nombre, archivo, { upsert: false, contentType: archivo.type })
+  if (error) throw new Error(error.message)
+  const { data: pub } = supabase.storage.from('logos').getPublicUrl(data.path)
+  return pub.publicUrl
+}
+
 export const subirImagenBanner = async (archivo) => {
   const ext = archivo.name.split('.').pop()
   const nombre = `banner_${Date.now()}.${ext}`

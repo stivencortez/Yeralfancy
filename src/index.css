@@ -111,3 +111,69 @@
     text-wrap: balance;
   }
 }
+
+/* ===================================================
+   Modo oscuro del panel admin (.dark en LayoutAdmin)
+   =================================================== */
+.dark { color-scheme: dark; }
+
+/* Fondos */
+.dark .bg-white { background-color: #1f2937; }
+.dark .bg-marca-beige-suave { background-color: #111827; }
+.dark .bg-marca-fondo { background-color: #111827; }
+.dark .bg-marca-beige { background-color: #374151; }
+.dark .bg-marca-beige-borde { background-color: #4b5563; }
+
+/* Textos */
+.dark .text-marca-negro { color: #f9fafb; }
+.dark .text-marca-texto { color: #f9fafb; }
+.dark .text-marca-texto-suave { color: #9ca3af; }
+.dark .text-marca-marron-oscuro { color: #B89070; }
+
+/* Bordes y separadores */
+.dark .border-marca-beige-borde { border-color: #374151; }
+.dark .divide-marca-beige-borde > :not([hidden]) ~ :not([hidden]) { border-color: #374151; }
+
+/* Hover states */
+.dark .hover\:bg-marca-beige:hover { background-color: #374151; }
+.dark .hover\:bg-marca-beige\/50:hover { background-color: rgb(55 65 81 / 0.5); }
+.dark .hover\:bg-marca-beige\/20:hover { background-color: rgb(55 65 81 / 0.2); }
+.dark .hover\:bg-marca-beige\/30:hover { background-color: rgb(55 65 81 / 0.3); }
+.dark .hover\:bg-marca-beige\/40:hover { background-color: rgb(55 65 81 / 0.4); }
+.dark .hover\:text-marca-negro:hover { color: #f9fafb; }
+.dark .hover\:bg-red-50:hover { background-color: rgba(239, 68, 68, 0.12); }
+.dark .hover\:bg-green-100:hover { background-color: rgba(34, 197, 94, 0.12); }
+.dark .hover\:bg-amber-100:hover { background-color: rgba(245, 158, 11, 0.12); }
+.dark .hover\:border-marca-marron:hover { border-color: #9B7B5B; }
+.dark .hover\:border-marca-beige-borde:hover { border-color: #4b5563; }
+
+/* Focus states */
+.dark .focus\:bg-white:focus { background-color: #111827; }
+.dark .focus\:border-marca-marron:focus { border-color: #9B7B5B; }
+
+/* Sombras */
+.dark .shadow-tarjeta { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4); }
+.dark .shadow-modal { box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); }
+
+/* Clases de componentes */
+.dark .input-campo {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+  color-scheme: dark;
+}
+.dark .input-campo::placeholder { color: #9ca3af; }
+.dark .input-campo:focus {
+  border-color: #9B7B5B;
+  background-color: #111827;
+}
+.dark .btn-outline {
+  color: #d1d5db;
+  border-color: #4b5563;
+}
+.dark .btn-outline:hover {
+  border-color: #9B7B5B;
+  color: #B89070;
+}
+.dark .etiqueta { color: #d1d5db; }
+.dark .tarjeta { background-color: #1f2937; }
