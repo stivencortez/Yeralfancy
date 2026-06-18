@@ -21,7 +21,7 @@ export const usePedidos = create(
         }
       },
 
-      crearPedido: (datos) => {
+      crearPedido: async (datos) => {
         const costoTotal = (datos.productos || []).reduce((acc, p) => acc + (p.precioCosto || 0) * p.cantidad, 0)
         const gananciaTotal = datos.total - costoTotal
         const nuevo = {
@@ -34,49 +34,48 @@ export const usePedidos = create(
           creadoEn: new Date().toISOString(),
           actualizadoEn: new Date().toISOString(),
         }
+        const { error } = await supabase.from('pedidos').insert(pedidoParaDB(nuevo))
+        if (error) throw new Error(error.message)
         set(s => ({ pedidos: [nuevo, ...s.pedidos] }))
-        supabase.from('pedidos').insert(pedidoParaDB(nuevo))
-          .then(({ error }) => { if (error) console.error('Error guardando pedido:', error) })
         return nuevo
       },
 
-      cambiarEstado: (id, nuevoEstado, fnDescontarStock) => {
-        set(s => {
-          const pedido = s.pedidos.find(p => p.id === id)
-          if (!pedido) return s
+      cambiarEstado: async (id, nuevoEstado, fnDescontarStock) => {
+        const pedido = get().pedidos.find(p => p.id === id)
+        if (!pedido) return
 
-          const yaEraPago = pedido.estado === 'Pago'
-          const ahoraPago = nuevoEstado === 'Pago'
+        const yaEraPago = pedido.estado === 'Pago'
+        const ahoraPago = nuevoEstado === 'Pago'
 
-          if (ahoraPago && !yaEraPago && !pedido.descontadoStock && fnDescontarStock) {
-            pedido.productos.forEach(item => {
-              fnDescontarStock(item.productoId, item.cantidad)
-            })
-          }
-
-          return {
-            pedidos: s.pedidos.map(p =>
-              p.id === id
-                ? {
-                    ...p,
-                    estado: nuevoEstado,
-                    descontadoStock: ahoraPago ? true : p.descontadoStock,
-                    actualizadoEn: new Date().toISOString(),
-                  }
-                : p
-            ),
-          }
-        })
-        const actualizado = get().pedidos.find(p => p.id === id)
-        if (actualizado) {
-          supabase.from('pedidos')
-            .update({
-              estado: actualizado.estado,
-              descontado_stock: actualizado.descontadoStock,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', id)
+        if (ahoraPago && !yaEraPago && !pedido.descontadoStock && fnDescontarStock) {
+          await Promise.all(
+            pedido.productos.map(item => fnDescontarStock(item.productoId, item.cantidad))
+          )
         }
+
+        const nuevoDescontadoStock = ahoraPago ? true : pedido.descontadoStock
+        const { error } = await supabase.from('pedidos')
+          .update({
+            estado: nuevoEstado,
+            descontado_stock: nuevoDescontadoStock,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id)
+        if (error) throw new Error(error.message)
+
+        set(s => ({
+          pedidos: s.pedidos.map(p =>
+            p.id === id
+              ? { ...p, estado: nuevoEstado, descontadoStock: nuevoDescontadoStock, actualizadoEn: new Date().toISOString() }
+              : p
+          ),
+        }))
+      },
+
+      limpiarPedidos: async () => {
+        const { error } = await supabase.from('pedidos').delete().neq('id', '__never__')
+        if (error) throw new Error(error.message)
+        set({ pedidos: [] })
       },
 
       getPedido: (id) => get().pedidos.find(p => p.id === id),

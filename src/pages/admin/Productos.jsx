@@ -1,26 +1,107 @@
-import { useState } from 'react'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Search, Package } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Search, Package, Upload, X } from 'lucide-react'
 import { useProductos } from '../../store/useProductos'
 import { useCategorias } from '../../store/useCategorias'
+import { subirImagenProducto } from '../../lib/supabase'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { formatearPrecio, calcularGanancia, calcularMargen, generarId } from '../../utils/formatear'
 import { EstadoVacio } from '../../components/ui/Cargando'
 
 const PRODUCTO_VACIO = { nombre: '', descripcion: '', categoriaId: '', precioCosto: '', precioVenta: '', stock: '', stockMinimo: '5', fotos: [], destacado: false, activo: true }
+const MAX_FOTOS = 5
+const LIMITE_MB = 5
+const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 
-function FormularioProducto({ datos, setDatos, categorias, onGuardar, onCancelar, titulo }) {
-  const [urlFoto, setUrlFoto] = useState('')
+function SelectorFotosProducto({ fotos, onCambio }) {
+  const inputRef = useRef(null)
+  const [subiendo, setSubiendo] = useState(false)
+  const [error, setError] = useState('')
+  const restantes = MAX_FOTOS - fotos.length
 
-  const agregarFoto = () => {
-    if (urlFoto.trim() && datos.fotos.length < 5) {
-      setDatos(d => ({ ...d, fotos: [...d.fotos, urlFoto.trim()] }))
-      setUrlFoto('')
+  const manejarArchivos = async (archivos) => {
+    setError('')
+    const lista = Array.from(archivos || []).slice(0, restantes)
+    if (lista.length === 0) return
+
+    if (lista.some(a => !a.type.startsWith('image/'))) {
+      setError('Solo se permiten imagenes.')
+      return
+    }
+    if (lista.some(a => a.size > LIMITE_BYTES)) {
+      setError(`Cada imagen debe pesar maximo ${LIMITE_MB} MB.`)
+      return
+    }
+
+    setSubiendo(true)
+    try {
+      const urls = await Promise.all(lista.map(archivo => subirImagenProducto(archivo)))
+      onCambio([...fotos, ...urls].slice(0, MAX_FOTOS))
+    } catch (e) {
+      setError('Error al subir imagenes: ' + e.message)
+    } finally {
+      setSubiendo(false)
+      if (inputRef.current) inputRef.current.value = ''
     }
   }
 
-  const quitarFoto = (i) => setDatos(d => ({ ...d, fotos: d.fotos.filter((_, idx) => idx !== i) }))
+  const quitarFoto = (i) => onCambio(fotos.filter((_, idx) => idx !== i))
 
+  return (
+    <div>
+      <label className="etiqueta">Fotos del producto - max. {MAX_FOTOS}</label>
+      <div
+        onDrop={e => { e.preventDefault(); manejarArchivos(e.dataTransfer.files) }}
+        onDragOver={e => e.preventDefault()}
+        onClick={() => restantes > 0 && inputRef.current?.click()}
+        className={`cursor-pointer border-2 border-dashed border-marca-beige-borde rounded-xl flex flex-col items-center justify-center gap-2 py-6 hover:border-marca-marron hover:bg-marca-beige/40 transition-colors ${restantes <= 0 ? 'opacity-60 cursor-not-allowed' : ''}`}
+      >
+        {subiendo ? (
+          <div className="flex flex-col items-center gap-2 text-marca-texto-suave">
+            <div className="w-6 h-6 border-2 border-marca-marron border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm">Subiendo...</span>
+          </div>
+        ) : (
+          <>
+            <Upload size={24} className="text-marca-marron" />
+            <span className="text-sm font-medium text-marca-negro">Haz clic o arrastra imagenes aqui</span>
+            <span className="text-xs text-marca-texto-suave">Puedes agregar {restantes} mas - JPG, PNG, WEBP</span>
+          </>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={e => manejarArchivos(e.target.files)}
+      />
+
+      {fotos.length > 0 && (
+        <div className="grid grid-cols-5 gap-2 mt-3">
+          {fotos.map((foto, i) => (
+            <div key={`${foto}-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-marca-beige">
+              <img src={foto} alt="" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => quitarFoto(i)}
+                className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  )
+}
+
+function FormularioProducto({ datos, setDatos, categorias, onGuardar, onCancelar, titulo }) {
   const ganancia = datos.precioCosto && datos.precioVenta
     ? calcularGanancia(Number(datos.precioCosto), Number(datos.precioVenta))
     : null
@@ -73,21 +154,10 @@ function FormularioProducto({ datos, setDatos, categorias, onGuardar, onCancelar
         </div>
       </div>
       <div>
-        <label className="etiqueta">Fotos (URL) — máx. 5</label>
-        <div className="flex gap-2 mb-2">
-          <input value={urlFoto} onChange={e => setUrlFoto(e.target.value)} onKeyDown={e => e.key === 'Enter' && agregarFoto()} className="input-campo flex-1" placeholder="https://..." />
-          <button onClick={agregarFoto} disabled={!urlFoto.trim() || datos.fotos.length >= 5} className="btn-primario px-4 py-2.5 text-sm">Agregar</button>
-        </div>
-        {datos.fotos.length > 0 && (
-          <div className="flex gap-2 flex-wrap">
-            {datos.fotos.map((f, i) => (
-              <div key={i} className="relative">
-                <img src={f} alt="" className="w-16 h-16 rounded-xl object-cover bg-marca-beige" />
-                <button onClick={() => quitarFoto(i)} className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs">×</button>
-              </div>
-            ))}
-          </div>
-        )}
+        <SelectorFotosProducto
+          fotos={datos.fotos || []}
+          onCambio={fotos => setDatos(d => ({ ...d, fotos }))}
+        />
       </div>
       <div className="flex gap-4">
         <label className="flex items-center gap-2 cursor-pointer">
@@ -122,19 +192,27 @@ export default function Productos() {
     p.nombre.toLowerCase().includes(busqueda.toLowerCase())
   )
 
-  const manejarGuardarNuevo = () => {
+  const manejarGuardarNuevo = async () => {
     if (!nuevo.nombre.trim() || !nuevo.precioVenta) { toast('Completa nombre y precio de venta', 'error'); return }
-    agregarProducto({ ...nuevo, precioCosto: Number(nuevo.precioCosto) || 0, precioVenta: Number(nuevo.precioVenta), stock: Number(nuevo.stock) || 0, stockMinimo: Number(nuevo.stockMinimo) || 5 })
-    setModalNuevo(false)
-    setNuevo({ ...PRODUCTO_VACIO })
-    toast('Producto creado correctamente', 'exito')
+    try {
+      await agregarProducto({ ...nuevo, precioCosto: Number(nuevo.precioCosto) || 0, precioVenta: Number(nuevo.precioVenta), stock: Number(nuevo.stock) || 0, stockMinimo: Number(nuevo.stockMinimo) || 5 })
+      setModalNuevo(false)
+      setNuevo({ ...PRODUCTO_VACIO })
+      toast('Producto creado correctamente', 'exito')
+    } catch (err) {
+      toast('Error al guardar producto: ' + err.message, 'error')
+    }
   }
 
-  const manejarGuardarEditar = () => {
+  const manejarGuardarEditar = async () => {
     if (!modalEditar.nombre.trim() || !modalEditar.precioVenta) { toast('Completa nombre y precio', 'error'); return }
-    editarProducto(modalEditar.id, { ...modalEditar, precioCosto: Number(modalEditar.precioCosto) || 0, precioVenta: Number(modalEditar.precioVenta), stock: Number(modalEditar.stock) || 0, stockMinimo: Number(modalEditar.stockMinimo) || 5 })
-    setModalEditar(null)
-    toast('Producto actualizado correctamente', 'exito')
+    try {
+      await editarProducto(modalEditar.id, { ...modalEditar, precioCosto: Number(modalEditar.precioCosto) || 0, precioVenta: Number(modalEditar.precioVenta), stock: Number(modalEditar.stock) || 0, stockMinimo: Number(modalEditar.stockMinimo) || 5 })
+      setModalEditar(null)
+      toast('Producto actualizado correctamente', 'exito')
+    } catch (err) {
+      toast('Error al actualizar producto: ' + err.message, 'error')
+    }
   }
 
   return (
@@ -209,7 +287,7 @@ export default function Productos() {
                           <button onClick={() => setModalEditar({ ...p })} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-marca-beige text-marca-texto-suave transition-colors">
                             <Edit2 size={14} />
                           </button>
-                          <button onClick={() => { if (confirm(`¿Eliminar "${p.nombre}"?`)) { eliminarProducto(p.id); toast('Producto eliminado', 'aviso') } }} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 text-red-400 transition-colors">
+                          <button onClick={async () => { if (confirm(`¿Eliminar "${p.nombre}"?`)) { try { await eliminarProducto(p.id); toast('Producto eliminado', 'aviso') } catch(e) { toast('Error al eliminar: ' + e.message, 'error') } } }} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 text-red-400 transition-colors">
                             <Trash2 size={14} />
                           </button>
                         </div>

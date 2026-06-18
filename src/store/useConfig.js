@@ -22,14 +22,26 @@ export const useConfig = create(
         }
       },
 
-      actualizarConfig: (datos) => {
-        set(s => ({
-          config: { ...s.config, ...datos, actualizadoEn: new Date().toISOString() },
-        }))
-        const configActual = get().config
-        supabase.from('config')
-          .upsert(configParaDB(configActual))
-          .then(({ error }) => { if (error) console.error('Error guardando config:', error) })
+      actualizarConfig: async (datos) => {
+        const nuevaConfig = { ...get().config, ...datos, actualizadoEn: new Date().toISOString() }
+        const configDB = configParaDB(nuevaConfig)
+        const { error } = await supabase.from('config').upsert(configDB)
+        let guardadoParcial = false
+
+        if (error) {
+          const faltaLogoDark = error.message?.includes('logo_dark') || error.code === 'PGRST204'
+          if (!faltaLogoDark) throw new Error(error.message)
+
+          const configCompatible = { ...configDB }
+          delete configCompatible.logo_dark
+          const { error: retryError } = await supabase.from('config').upsert(configCompatible)
+          if (retryError) throw new Error(retryError.message)
+          guardadoParcial = true
+        }
+
+        const configFinal = guardadoParcial ? { ...nuevaConfig, logoDark: get().config.logoDark || null } : nuevaConfig
+        set({ config: configFinal })
+        return { guardadoParcial }
       },
     }),
     { name: 'yf-config' }

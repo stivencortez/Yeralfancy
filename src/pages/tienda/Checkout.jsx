@@ -58,13 +58,20 @@ export default function Checkout() {
       foto: i.foto,
     }))
 
-    const pedido = crearPedido({
-      clienteNombre: nombre.trim(),
-      clienteTelefono: telefono.trim(),
-      productos,
-      subtotal: total,
-      total,
-    })
+    let pedido
+    try {
+      pedido = await crearPedido({
+        clienteNombre: nombre.trim(),
+        clienteTelefono: telefono.trim(),
+        productos,
+        subtotal: total,
+        total,
+      })
+    } catch (err) {
+      setErrores(e => ({ ...e, _general: 'Error al crear el pedido. Por favor intenta de nuevo.' }))
+      setEnviando(false)
+      return
+    }
 
     agregarCliente(nombre.trim(), telefono.trim(), total, 'Pendiente')
 
@@ -77,8 +84,6 @@ export default function Checkout() {
     })
 
     vaciarCarrito()
-
-    await new Promise(r => setTimeout(r, 800))
     setEnviando(false)
 
     abrirWhatsApp(whatsapp, mensaje)
@@ -170,6 +175,12 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {errores._general && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl">
+          <p className="text-red-600 text-sm text-center">{errores._general}</p>
+        </div>
+      )}
 
       <button
         onClick={manejarFinalizar}

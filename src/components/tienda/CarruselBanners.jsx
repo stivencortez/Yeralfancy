@@ -28,32 +28,32 @@ export function CarruselBanners() {
 
   return (
     <>
-      {/* ── Mobile banner: card premium 4:3 con overlay ── */}
+      {/* ── Mobile banner: imagen completa, sin recortes ── */}
       <div
-        className="relative w-full overflow-hidden rounded-[24px] shadow-banner cursor-pointer lg:hidden"
-        style={{ aspectRatio: '4/3' }}
+        className="relative w-full overflow-hidden rounded-2xl shadow-banner cursor-pointer bg-marca-beige lg:hidden"
+        style={{ aspectRatio: '16/5' }}
         onClick={() => banner.enlace && navigate(banner.enlace)}
       >
         <img
           src={banner.imagen}
           alt={banner.titulo || 'Banner'}
-          className="w-full h-full object-cover transition-all duration-500"
+          className="w-full h-full object-contain transition-all duration-500"
           loading="eager"
         />
         {/* Overlay gradiente siempre visible en mobile */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
 
         {/* Texto sobre imagen */}
         {(banner.titulo || banner.subtitulo) && (
-          <div className="absolute bottom-0 left-0 right-0 p-5">
+          <div className="absolute bottom-0 left-0 right-0 p-3">
             {banner.subtitulo && (
-              <p className="text-white/80 text-xs font-medium uppercase tracking-widest mb-1">{banner.subtitulo}</p>
+              <p className="text-white/85 text-[10px] font-medium uppercase tracking-widest mb-0.5 line-clamp-1">{banner.subtitulo}</p>
             )}
             {banner.titulo && (
-              <h2 className="text-white font-bold text-xl leading-tight drop-shadow-sm">{banner.titulo}</h2>
+              <h2 className="text-white font-bold text-sm leading-tight drop-shadow-sm line-clamp-1">{banner.titulo}</h2>
             )}
             {banner.enlace && (
-              <span className="inline-block mt-3 bg-white text-marca-negro text-xs font-semibold px-4 py-1.5 rounded-full">
+              <span className="inline-block mt-1.5 bg-white text-marca-negro text-[10px] font-semibold px-3 py-1 rounded-full">
                 Ver colección
               </span>
             )}

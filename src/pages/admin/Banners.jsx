@@ -139,19 +139,27 @@ export default function Banners() {
   const [modalEditar, setModalEditar] = useState(null)
   const [nuevo, setNuevo] = useState({ ...VACIO })
 
-  const manejarGuardarNuevo = () => {
+  const manejarGuardarNuevo = async () => {
     if (!nuevo.imagen) { toast('La imagen es requerida', 'error'); return }
-    agregarBanner(nuevo)
-    setModalNuevo(false)
-    setNuevo({ ...VACIO })
-    toast('Banner creado correctamente', 'exito')
+    try {
+      await agregarBanner(nuevo)
+      setModalNuevo(false)
+      setNuevo({ ...VACIO })
+      toast('Banner creado correctamente', 'exito')
+    } catch (err) {
+      toast('Error al guardar banner: ' + err.message, 'error')
+    }
   }
 
-  const manejarGuardarEditar = () => {
+  const manejarGuardarEditar = async () => {
     if (!modalEditar.imagen) { toast('La imagen es requerida', 'error'); return }
-    editarBanner(modalEditar.id, modalEditar)
-    setModalEditar(null)
-    toast('Banner actualizado correctamente', 'exito')
+    try {
+      await editarBanner(modalEditar.id, modalEditar)
+      setModalEditar(null)
+      toast('Banner actualizado correctamente', 'exito')
+    } catch (err) {
+      toast('Error al actualizar banner: ' + err.message, 'error')
+    }
   }
 
   return (
@@ -196,7 +204,7 @@ export default function Banners() {
                   <button onClick={() => setModalEditar({ ...b })} className="w-8 h-8 rounded-xl hover:bg-marca-beige flex items-center justify-center text-marca-texto-suave transition-colors">
                     <Edit2 size={15} />
                   </button>
-                  <button onClick={() => { if (confirm('¿Eliminar este banner?')) { eliminarBanner(b.id); toast('Banner eliminado', 'aviso') } }} className="w-8 h-8 rounded-xl hover:bg-red-50 flex items-center justify-center text-red-400 transition-colors">
+                  <button onClick={async () => { if (confirm('¿Eliminar este banner?')) { try { await eliminarBanner(b.id); toast('Banner eliminado', 'aviso') } catch(e) { toast('Error al eliminar: ' + e.message, 'error') } } }} className="w-8 h-8 rounded-xl hover:bg-red-50 flex items-center justify-center text-red-400 transition-colors">
                     <Trash2 size={15} />
                   </button>
                 </div>

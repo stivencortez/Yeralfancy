@@ -1,13 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { supabase, productoDeDB, productoParaDB } from '../lib/supabase'
-import { PRODUCTOS_INICIALES } from '../data/datosIniciales'
 import { generarId } from '../utils/formatear'
 
 export const useProductos = create(
   persist(
     (set, get) => ({
-      productos: PRODUCTOS_INICIALES,
+      productos: [],
 
       sincronizarDesdeSupabase: async () => {
         try {
@@ -16,17 +15,13 @@ export const useProductos = create(
             .select('*')
             .order('created_at')
           if (error) { console.warn('Supabase productos:', error.message); return }
-          if (data.length === 0) {
-            await supabase.from('productos').insert(PRODUCTOS_INICIALES.map(productoParaDB))
-          } else {
-            set({ productos: data.map(productoDeDB) })
-          }
+          set({ productos: data.map(productoDeDB) })
         } catch (e) {
           console.warn('Error sync productos:', e)
         }
       },
 
-      agregarProducto: (datos) => {
+      agregarProducto: async (datos) => {
         const nuevo = {
           ...datos,
           id: generarId(),
@@ -34,78 +29,112 @@ export const useProductos = create(
           creadoEn: new Date().toISOString(),
           actualizadoEn: new Date().toISOString(),
         }
+        const { error } = await supabase.from('productos').insert(productoParaDB(nuevo))
+        if (error) throw new Error(error.message)
         set(s => ({ productos: [...s.productos, nuevo] }))
-        supabase.from('productos').insert(productoParaDB(nuevo)).then(({ error }) => {
-          if (error) console.error('Error guardando producto:', error)
-        })
         return nuevo
       },
 
-      editarProducto: (id, datos) => {
-        set(s => ({
-          productos: s.productos.map(p =>
-            p.id === id ? { ...p, ...datos, actualizadoEn: new Date().toISOString() } : p
-          ),
-        }))
-        const actualizado = get().productos.find(p => p.id === id)
-        if (actualizado) {
-          supabase.from('productos')
-            .update({ ...productoParaDB(actualizado), updated_at: new Date().toISOString() })
-            .eq('id', id)
-            .then(({ error }) => { if (error) console.error('Error editando producto:', error) })
-        }
+      editarProducto: async (id, datos) => {
+        const actual = get().productos.find(p => p.id === id)
+        if (!actual) return
+        const actualizado = { ...actual, ...datos, actualizadoEn: new Date().toISOString() }
+        const { error } = await supabase.from('productos')
+          .update({ ...productoParaDB(actualizado), updated_at: actualizado.actualizadoEn })
+          .eq('id', id)
+        if (error) throw new Error(error.message)
+        set(s => ({ productos: s.productos.map(p => p.id === id ? actualizado : p) }))
       },
 
-      eliminarProducto: (id) => {
+      eliminarProducto: async (id) => {
+        const { error } = await supabase.from('productos').delete().eq('id', id)
+        if (error) throw new Error(error.message)
         set(s => ({ productos: s.productos.filter(p => p.id !== id) }))
-        supabase.from('productos').delete().eq('id', id)
-          .then(({ error }) => { if (error) console.error('Error eliminando producto:', error) })
+      },
+
+      limpiarProductos: async () => {
+        const { error } = await supabase.from('productos').delete().neq('id', '__never__')
+        if (error) throw new Error(error.message)
+        set({ productos: [] })
       },
 
       toggleActivo: (id) => {
+        const p = get().productos.find(prod => prod.id === id)
+        if (!p) return
+        const nuevoActivo = !p.activo
         set(s => ({
-          productos: s.productos.map(p =>
-            p.id === id ? { ...p, activo: !p.activo, actualizadoEn: new Date().toISOString() } : p
+          productos: s.productos.map(prod =>
+            prod.id === id ? { ...prod, activo: nuevoActivo, actualizadoEn: new Date().toISOString() } : prod
           ),
         }))
-        const p = get().productos.find(prod => prod.id === id)
-        if (p) supabase.from('productos').update({ activo: p.activo, updated_at: new Date().toISOString() }).eq('id', id)
+        supabase.from('productos')
+          .update({ activo: nuevoActivo, updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error toggleActivo:', error)
+              set(s => ({
+                productos: s.productos.map(prod =>
+                  prod.id === id ? { ...prod, activo: p.activo } : prod
+                ),
+              }))
+            }
+          })
       },
 
       toggleDestacado: (id) => {
+        const p = get().productos.find(prod => prod.id === id)
+        if (!p) return
+        const nuevoDestacado = !p.destacado
         set(s => ({
-          productos: s.productos.map(p =>
-            p.id === id ? { ...p, destacado: !p.destacado, actualizadoEn: new Date().toISOString() } : p
+          productos: s.productos.map(prod =>
+            prod.id === id ? { ...prod, destacado: nuevoDestacado, actualizadoEn: new Date().toISOString() } : prod
           ),
         }))
-        const p = get().productos.find(prod => prod.id === id)
-        if (p) supabase.from('productos').update({ destacado: p.destacado, updated_at: new Date().toISOString() }).eq('id', id)
+        supabase.from('productos')
+          .update({ destacado: nuevoDestacado, updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error toggleDestacado:', error)
+              set(s => ({
+                productos: s.productos.map(prod =>
+                  prod.id === id ? { ...prod, destacado: p.destacado } : prod
+                ),
+              }))
+            }
+          })
       },
 
-      actualizarStock: (id, cantidad) => {
+      actualizarStock: async (id, cantidad) => {
         const nuevoStock = Math.max(0, cantidad)
+        const { error } = await supabase.from('productos')
+          .update({ stock: nuevoStock, updated_at: new Date().toISOString() })
+          .eq('id', id)
+        if (error) throw new Error(error.message)
         set(s => ({
           productos: s.productos.map(p =>
             p.id === id ? { ...p, stock: nuevoStock, actualizadoEn: new Date().toISOString() } : p
           ),
         }))
-        supabase.from('productos').update({ stock: nuevoStock, updated_at: new Date().toISOString() }).eq('id', id)
       },
 
-      descontarStock: (id, cantidad) => {
+      descontarStock: async (id, cantidad) => {
+        const p = get().productos.find(prod => prod.id === id)
+        if (!p) return
+        const nuevoStock = Math.max(0, p.stock - cantidad)
+        const nuevosVendidos = (p.vendidos || 0) + cantidad
+        const { error } = await supabase.from('productos')
+          .update({ stock: nuevoStock, vendidos: nuevosVendidos, updated_at: new Date().toISOString() })
+          .eq('id', id)
+        if (error) throw new Error(error.message)
         set(s => ({
-          productos: s.productos.map(p =>
-            p.id === id
-              ? { ...p, stock: Math.max(0, p.stock - cantidad), vendidos: (p.vendidos || 0) + cantidad, actualizadoEn: new Date().toISOString() }
-              : p
+          productos: s.productos.map(prod =>
+            prod.id === id
+              ? { ...prod, stock: nuevoStock, vendidos: nuevosVendidos, actualizadoEn: new Date().toISOString() }
+              : prod
           ),
         }))
-        const p = get().productos.find(prod => prod.id === id)
-        if (p) {
-          supabase.from('productos')
-            .update({ stock: p.stock, vendidos: p.vendidos, updated_at: new Date().toISOString() })
-            .eq('id', id)
-        }
       },
 
       getProducto: (id) => get().productos.find(p => p.id === id),

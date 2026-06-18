@@ -1,7 +1,12 @@
 import { useState, useRef } from 'react'
-import { Save, Store, Share2, Lock, Image as ImageIcon, Upload, Check, Eye, EyeOff, Moon } from 'lucide-react'
+import { Save, Store, Share2, Lock, Image as ImageIcon, Upload, Check, Eye, EyeOff, Moon, Trash2, AlertTriangle } from 'lucide-react'
 import { useConfig } from '../../store/useConfig'
 import { useAuth } from '../../store/useAuth'
+import { useClientes } from '../../store/useClientes'
+import { usePedidos } from '../../store/usePedidos'
+import { useProductos } from '../../store/useProductos'
+import { useCategorias } from '../../store/useCategorias'
+import { useBanners } from '../../store/useBanners'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { subirImagenLogo } from '../../lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -11,6 +16,7 @@ const TABS = [
   { id: 'logos',     label: 'Logos',     icono: ImageIcon },
   { id: 'redes',     label: 'Redes',     icono: Share2    },
   { id: 'seguridad', label: 'Seguridad', icono: Lock      },
+  { id: 'reset',     label: 'Reset',     icono: Trash2    },
 ]
 
 const LOGOS_PRE = [
@@ -90,6 +96,11 @@ export default function Configuracion() {
   const actualizarConfig = useConfig(s => s.actualizarConfig)
   const cambiarContrasena = useAuth(s => s.cambiarContrasena)
   const credenciales    = useAuth(s => s.credenciales)
+  const limpiarClientes = useClientes(s => s.limpiarClientes)
+  const limpiarPedidos = usePedidos(s => s.limpiarPedidos)
+  const limpiarProductos = useProductos(s => s.limpiarProductos)
+  const limpiarCategorias = useCategorias(s => s.limpiarCategorias)
+  const limpiarBanners = useBanners(s => s.limpiarBanners)
   const toast           = useAdminToast()
 
   const [tabActivo, setTabActivo] = useState('tienda')
@@ -97,6 +108,7 @@ export default function Configuracion() {
   const [pass, setPass]           = useState({ actual: '', nueva: '', confirmar: '' })
   const [verPass, setVerPass]     = useState({ actual: false, nueva: false, confirmar: false })
   const [guardando, setGuardando] = useState(false)
+  const [resetActivo, setResetActivo] = useState('')
   const [subiendoLogo, setSubiendoLogo]         = useState(false)
   const [subiendoLogoDark, setSubiendoLogoDark] = useState(false)
   const inputLogoRef     = useRef(null)
@@ -104,10 +116,18 @@ export default function Configuracion() {
 
   const guardarConfig = async () => {
     setGuardando(true)
-    await new Promise(r => setTimeout(r, 350))
-    actualizarConfig(datos)
-    setGuardando(false)
-    toast('Configuración guardada correctamente', 'exito')
+    try {
+      const resultado = await actualizarConfig(datos)
+      if (resultado?.guardadoParcial) {
+        toast('Configuración guardada, pero falta crear logo_dark en Supabase', 'aviso')
+      } else {
+        toast('Configuración guardada correctamente', 'exito')
+      }
+    } catch (err) {
+      toast('Error al guardar configuración: ' + err.message, 'error')
+    } finally {
+      setGuardando(false)
+    }
   }
 
   const cambiarPass = () => {
@@ -142,6 +162,46 @@ export default function Configuracion() {
     value: datos[key] ?? '',
     onChange: (e) => setDatos(d => ({ ...d, [key]: e.target.value })),
   })
+
+  const ejecutarReset = async (tipo) => {
+    const mensajes = {
+      clientes: 'BORRAR CLIENTES',
+      pedidos: 'BORRAR PEDIDOS',
+      catalogo: 'BORRAR CATALOGO',
+      todo: 'BORRAR TODO',
+    }
+    const confirmado = prompt(`Esta accion no se puede deshacer. Escribe "${mensajes[tipo]}" para confirmar.`)
+    if (confirmado !== mensajes[tipo]) {
+      toast('Reset cancelado', 'aviso')
+      return
+    }
+
+    setResetActivo(tipo)
+    try {
+      if (tipo === 'clientes') {
+        await limpiarClientes()
+      }
+      if (tipo === 'pedidos') {
+        await limpiarPedidos()
+      }
+      if (tipo === 'catalogo') {
+        await limpiarProductos()
+        await limpiarCategorias()
+      }
+      if (tipo === 'todo') {
+        await limpiarPedidos()
+        await limpiarClientes()
+        await limpiarProductos()
+        await limpiarCategorias()
+        await limpiarBanners()
+      }
+      toast('Datos eliminados correctamente', 'exito')
+    } catch (err) {
+      toast('Error al limpiar datos: ' + err.message, 'error')
+    } finally {
+      setResetActivo('')
+    }
+  }
 
   return (
     <div className="animate-fade-in max-w-xl">
@@ -379,6 +439,65 @@ export default function Configuracion() {
             >
               <Lock size={16} />Cambiar contraseña
             </motion.button>
+          </motion.div>
+        )}
+
+        {/* Reset */}
+        {tabActivo === 'reset' && (
+          <motion.div key="reset" variants={pageVariants} initial="initial" animate="animate" exit="exit" transition={pageTransition}>
+            <div className="bg-white rounded-2xl shadow-tarjeta p-5">
+              <SeccionHeader icono={AlertTriangle} titulo="Reset de datos" subtitulo="Limpia registros del banco de datos" iconoBg="bg-red-50" />
+
+              <div className="space-y-3">
+                {[
+                  {
+                    id: 'clientes',
+                    titulo: 'Borrar todos los clientes',
+                    texto: 'Elimina la lista de clientes y sus totales acumulados.',
+                    accion: 'Borrar clientes',
+                  },
+                  {
+                    id: 'pedidos',
+                    titulo: 'Borrar toda la lista de compras',
+                    texto: 'Elimina todos los pedidos registrados.',
+                    accion: 'Borrar pedidos',
+                  },
+                  {
+                    id: 'catalogo',
+                    titulo: 'Borrar productos y categorias',
+                    texto: 'Elimina productos registrados y despues sus categorias.',
+                    accion: 'Borrar catalogo',
+                  },
+                  {
+                    id: 'todo',
+                    titulo: 'Borrar todo',
+                    texto: 'Elimina clientes, pedidos, productos, categorias y banners.',
+                    accion: 'Borrar todo',
+                  },
+                ].map(opcion => (
+                  <div key={opcion.id} className="rounded-2xl border border-marca-beige-borde p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-marca-negro text-sm">{opcion.titulo}</p>
+                        <p className="text-xs text-marca-texto-suave mt-1 leading-relaxed">{opcion.texto}</p>
+                      </div>
+                      <button
+                        onClick={() => ejecutarReset(opcion.id)}
+                        disabled={!!resetActivo}
+                        className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-60 transition-colors"
+                      >
+                        {resetActivo === opcion.id ? (
+                          <span className="w-3 h-3 border border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 size={13} />
+                        )}
+                        {opcion.accion}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </motion.div>
         )}
 

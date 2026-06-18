@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Search, MessageCircle, ChevronDown, Filter } from 'lucide-react'
 import { usePedidos } from '../../store/usePedidos'
 import { useProductos } from '../../store/useProductos'
+import { useClientes } from '../../store/useClientes'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { formatearPrecio, formatearFechaHora, estadoColor, ESTADOS_PEDIDO } from '../../utils/formatear'
@@ -11,6 +12,7 @@ import { useConfig } from '../../store/useConfig'
 export default function Pedidos() {
   const { pedidos, cambiarEstado } = usePedidos()
   const descontarStock = useProductos(s => s.descontarStock)
+  const registrarCliente = useClientes(s => s.agregarOActualizarCliente)
   const whatsapp = useConfig(s => s.config.whatsapp)
   const toast = useAdminToast()
 
@@ -24,11 +26,23 @@ export default function Pedidos() {
     return porNombre && porEstado
   })
 
-  const manejarCambiarEstado = (pedidoId, nuevoEstado) => {
-    cambiarEstado(pedidoId, nuevoEstado, descontarStock)
-    toast(`Estado actualizado: ${nuevoEstado}`, 'exito')
-    if (pedidoDetalle?.id === pedidoId) {
-      setPedidoDetalle(prev => ({ ...prev, estado: nuevoEstado }))
+  const manejarCambiarEstado = async (pedidoId, nuevoEstado) => {
+    try {
+      const pedido = pedidos.find(p => p.id === pedidoId)
+      const debeRegistrarCliente = pedido && pedido.estado !== 'Pago' && nuevoEstado === 'Pago'
+
+      await cambiarEstado(pedidoId, nuevoEstado, descontarStock)
+
+      if (debeRegistrarCliente) {
+        await registrarCliente(pedido.clienteNombre, pedido.clienteTelefono, pedido.total, nuevoEstado)
+      }
+
+      toast(`Estado actualizado: ${nuevoEstado}`, 'exito')
+      if (pedidoDetalle?.id === pedidoId) {
+        setPedidoDetalle(prev => ({ ...prev, estado: nuevoEstado }))
+      }
+    } catch (err) {
+      toast('Error al cambiar estado: ' + err.message, 'error')
     }
   }
 

@@ -1,11 +1,98 @@
-import { useState } from 'react'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Tag } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, Tag, Upload, Image, X } from 'lucide-react'
 import { useCategorias } from '../../store/useCategorias'
+import { subirImagenCategoria } from '../../lib/supabase'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { EstadoVacio } from '../../components/ui/Cargando'
 
+const LIMITE_MB = 5
+const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 const VACIA = { nombre: '', descripcion: '', imagen: '', activa: true, orden: 1 }
+
+function SelectorImagenCategoria({ urlActual, onCambio }) {
+  const inputRef = useRef(null)
+  const [subiendo, setSubiendo] = useState(false)
+  const [error, setError] = useState('')
+
+  const manejarArchivo = async (archivo) => {
+    setError('')
+    if (!archivo) return
+    if (!archivo.type.startsWith('image/')) {
+      setError('El archivo debe ser una imagen.')
+      return
+    }
+    if (archivo.size > LIMITE_BYTES) {
+      setError(`El archivo supera el limite de ${LIMITE_MB} MB.`)
+      return
+    }
+    setSubiendo(true)
+    try {
+      const url = await subirImagenCategoria(archivo)
+      onCambio(url)
+    } catch (e) {
+      setError('Error al subir la imagen: ' + e.message)
+    } finally {
+      setSubiendo(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  const limpiar = () => {
+    onCambio('')
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  return (
+    <div>
+      <label className="etiqueta">Imagen de categoria</label>
+
+      {urlActual ? (
+        <div className="relative rounded-xl overflow-hidden bg-marca-beige border border-marca-beige-borde" style={{ aspectRatio: '16/9' }}>
+          <img src={urlActual} alt="" className="w-full h-full object-cover" />
+          <button
+            type="button"
+            onClick={limpiar}
+            className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 transition-colors"
+            title="Quitar imagen"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ) : (
+        <div
+          onDrop={e => { e.preventDefault(); manejarArchivo(e.dataTransfer.files[0]) }}
+          onDragOver={e => e.preventDefault()}
+          onClick={() => inputRef.current?.click()}
+          className="cursor-pointer border-2 border-dashed border-marca-beige-borde rounded-xl flex flex-col items-center justify-center gap-2 py-7 hover:border-marca-marron hover:bg-marca-beige/40 transition-colors"
+        >
+          {subiendo ? (
+            <div className="flex flex-col items-center gap-2 text-marca-texto-suave">
+              <div className="w-6 h-6 border-2 border-marca-marron border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm">Subiendo...</span>
+            </div>
+          ) : (
+            <>
+              <Upload size={24} className="text-marca-marron" />
+              <span className="text-sm font-medium text-marca-negro">Haz clic o arrastra la imagen aqui</span>
+              <span className="text-xs text-marca-texto-suave">JPG, PNG, WEBP - Max. {LIMITE_MB} MB</span>
+            </>
+          )}
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => manejarArchivo(e.target.files[0])}
+      />
+
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  )
+}
 
 function FormCategoria({ datos, setDatos, onGuardar, onCancelar }) {
   return (
@@ -19,9 +106,10 @@ function FormCategoria({ datos, setDatos, onGuardar, onCancelar }) {
         <textarea value={datos.descripcion} onChange={e => setDatos(d => ({ ...d, descripcion: e.target.value }))} className="input-campo resize-none" rows={2} placeholder="Descripción breve..." />
       </div>
       <div>
-        <label className="etiqueta">URL de imagen</label>
-        <input value={datos.imagen} onChange={e => setDatos(d => ({ ...d, imagen: e.target.value }))} className="input-campo" placeholder="https://..." />
-        {datos.imagen && <img src={datos.imagen} alt="" className="w-24 h-16 rounded-xl object-cover mt-2 bg-marca-beige" />}
+        <SelectorImagenCategoria
+          urlActual={datos.imagen}
+          onCambio={url => setDatos(d => ({ ...d, imagen: url }))}
+        />
       </div>
       <div>
         <label className="etiqueta">Orden de aparición</label>
@@ -46,19 +134,27 @@ export default function CategoriasAdmin() {
   const [modalEditar, setModalEditar] = useState(null)
   const [nueva, setNueva] = useState({ ...VACIA })
 
-  const manejarGuardarNueva = () => {
+  const manejarGuardarNueva = async () => {
     if (!nueva.nombre.trim()) { toast('El nombre es requerido', 'error'); return }
-    agregarCategoria({ ...nueva, orden: Number(nueva.orden) || 1 })
-    setModalNueva(false)
-    setNueva({ ...VACIA })
-    toast('Categoría creada correctamente', 'exito')
+    try {
+      await agregarCategoria({ ...nueva, orden: Number(nueva.orden) || 1 })
+      setModalNueva(false)
+      setNueva({ ...VACIA })
+      toast('Categoría creada correctamente', 'exito')
+    } catch (err) {
+      toast('Error al guardar categoría: ' + err.message, 'error')
+    }
   }
 
-  const manejarGuardarEditar = () => {
+  const manejarGuardarEditar = async () => {
     if (!modalEditar.nombre.trim()) { toast('El nombre es requerido', 'error'); return }
-    editarCategoria(modalEditar.id, modalEditar)
-    setModalEditar(null)
-    toast('Categoría actualizada correctamente', 'exito')
+    try {
+      await editarCategoria(modalEditar.id, modalEditar)
+      setModalEditar(null)
+      toast('Categoría actualizada correctamente', 'exito')
+    } catch (err) {
+      toast('Error al actualizar categoría: ' + err.message, 'error')
+    }
   }
 
   return (
@@ -82,7 +178,9 @@ export default function CategoriasAdmin() {
                 {c.imagen ? (
                   <img src={c.imagen} alt={c.nombre} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl">💎</div>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Image size={24} className="text-marca-beige-borde" />
+                  </div>
                 )}
               </div>
               <div className="p-3">
@@ -98,7 +196,7 @@ export default function CategoriasAdmin() {
                   <button onClick={() => setModalEditar({ ...c })} className="w-8 h-8 rounded-xl hover:bg-marca-beige flex items-center justify-center text-marca-texto-suave transition-colors">
                     <Edit2 size={14} />
                   </button>
-                  <button onClick={() => { if (confirm(`¿Eliminar "${c.nombre}"?`)) { eliminarCategoria(c.id); toast('Categoría eliminada', 'aviso') } }} className="w-8 h-8 rounded-xl hover:bg-red-50 flex items-center justify-center text-red-400 transition-colors">
+                  <button onClick={async () => { if (confirm(`¿Eliminar "${c.nombre}"?`)) { try { await eliminarCategoria(c.id); toast('Categoría eliminada', 'aviso') } catch(e) { toast('Error al eliminar: ' + e.message, 'error') } } }} className="w-8 h-8 rounded-xl hover:bg-red-50 flex items-center justify-center text-red-400 transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>

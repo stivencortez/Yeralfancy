@@ -113,26 +113,55 @@ export const clienteParaDB = (obj) => ({
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
-export const subirImagenLogo = async (archivo) => {
+const imagenADataUrlComprimida = (archivo, maxLado = 1200, calidad = 0.82) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
+  reader.onload = () => {
+    const img = new window.Image()
+    img.onerror = () => reject(new Error('No se pudo procesar la imagen'))
+    img.onload = () => {
+      const escala = Math.min(1, maxLado / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(img.width * escala))
+      canvas.height = Math.max(1, Math.round(img.height * escala))
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      resolve(canvas.toDataURL('image/jpeg', calidad))
+    }
+    img.src = reader.result
+  }
+  reader.readAsDataURL(archivo)
+})
+
+const subirImagenConFallback = async (archivo, bucket, prefijo, opciones = {}) => {
   const ext = archivo.name.split('.').pop()
-  const nombre = `logo_${Date.now()}.${ext}`
+  const nombre = `${prefijo}_${Date.now()}.${ext}`
   const { data, error } = await supabase.storage
-    .from('logos')
+    .from(bucket)
     .upload(nombre, archivo, { upsert: false, contentType: archivo.type })
-  if (error) throw new Error(error.message)
-  const { data: pub } = supabase.storage.from('logos').getPublicUrl(data.path)
-  return pub.publicUrl
+
+  if (!error) {
+    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(data.path)
+    return pub.publicUrl
+  }
+
+  return imagenADataUrlComprimida(archivo, opciones.maxLado, opciones.calidad)
+}
+
+export const subirImagenLogo = async (archivo) => {
+  return subirImagenConFallback(archivo, 'logos', 'logo', { maxLado: 900, calidad: 0.86 })
 }
 
 export const subirImagenBanner = async (archivo) => {
-  const ext = archivo.name.split('.').pop()
-  const nombre = `banner_${Date.now()}.${ext}`
-  const { data, error } = await supabase.storage
-    .from('banners')
-    .upload(nombre, archivo, { upsert: false, contentType: archivo.type })
-  if (error) throw new Error(error.message)
-  const { data: pub } = supabase.storage.from('banners').getPublicUrl(data.path)
-  return pub.publicUrl
+  return subirImagenConFallback(archivo, 'banners', 'banner', { maxLado: 1400, calidad: 0.82 })
+}
+
+export const subirImagenCategoria = async (archivo) => {
+  return subirImagenConFallback(archivo, 'categorias', 'categoria', { maxLado: 1200, calidad: 0.82 })
+}
+
+export const subirImagenProducto = async (archivo) => {
+  return subirImagenConFallback(archivo, 'productos', 'producto', { maxLado: 1200, calidad: 0.82 })
 }
 
 // ─── Banners ──────────────────────────────────────────────────────────────────
