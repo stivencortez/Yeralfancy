@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Upload, X, Smartphone, Info, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, Upload, X, Smartphone } from 'lucide-react'
 import { usePWAIntro } from '../../store/usePWAIntro'
 import { subirImagenBanner } from '../../lib/supabase'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
@@ -198,57 +198,6 @@ function VistaPrevia({ banner, config }) {
   )
 }
 
-// ─── Nota SQL ─────────────────────────────────────────────────────────────────
-function NotaSQL() {
-  const [abierta, setAbierta] = useState(false)
-  const sql = `-- Ejecutar en Supabase SQL Editor
-CREATE TABLE IF NOT EXISTS pwa_intro_config (
-  id integer PRIMARY KEY DEFAULT 1,
-  habilitado boolean NOT NULL DEFAULT true,
-  modo_visualizacion text NOT NULL DEFAULT 'siempre',
-  CONSTRAINT solo_una_fila CHECK (id = 1)
-);
-INSERT INTO pwa_intro_config (id, habilitado, modo_visualizacion)
-VALUES (1, true, 'siempre') ON CONFLICT (id) DO NOTHING;
-
-CREATE TABLE IF NOT EXISTS pwa_intro_banners (
-  id text PRIMARY KEY,
-  imagen text NOT NULL DEFAULT '',
-  titulo text NOT NULL DEFAULT '',
-  subtitulo text NOT NULL DEFAULT '',
-  boton_texto text NOT NULL DEFAULT 'Desliza para entrar',
-  activo boolean NOT NULL DEFAULT true,
-  orden integer NOT NULL DEFAULT 1,
-  created_at timestamptz NOT NULL DEFAULT now()
-);`
-
-  return (
-    <div className="rounded-2xl border border-marca-beige-borde bg-marca-beige/40 overflow-hidden">
-      <button
-        onClick={() => setAbierta(a => !a)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
-      >
-        <div className="flex items-center gap-2">
-          <Info size={15} className="text-marca-marron shrink-0" />
-          <span className="text-sm font-medium text-marca-negro">Configuración de base de datos (Supabase)</span>
-        </div>
-        {abierta ? <ChevronUp size={15} className="text-marca-texto-suave" /> : <ChevronDown size={15} className="text-marca-texto-suave" />}
-      </button>
-      {abierta && (
-        <div className="px-4 pb-4 space-y-2">
-          <p className="text-xs text-marca-texto-suave">
-            Para que los banners PWA persistan en la nube, ejecuta este SQL en tu panel de Supabase (SQL Editor):
-          </p>
-          <pre className="text-[10px] bg-marca-negro text-marca-beige rounded-xl p-3 overflow-x-auto leading-relaxed whitespace-pre-wrap">{sql}</pre>
-          <p className="text-xs text-marca-texto-suave">
-            Sin estas tablas, la configuración se guarda solo en este dispositivo (localStorage).
-          </p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Página principal ─────────────────────────────────────────────────────────
 export default function PWAIntro() {
   const { config, banners, actualizarConfig, agregarBanner, editarBanner, eliminarBanner, toggleActivo, getBannersActivos } = usePWAIntro()
@@ -359,51 +308,46 @@ export default function PWAIntro() {
               </div>
             ) : (
               bannersOrdenados.map(b => (
-                <div key={b.id} className={`bg-white rounded-2xl shadow-tarjeta overflow-hidden ${!b.activo ? 'opacity-60' : ''}`}>
-                  <div className="flex gap-3 p-3">
-                    {/* Miniatura */}
-                    <div
-                      className="w-16 h-20 rounded-xl overflow-hidden shrink-0 bg-marca-beige flex items-center justify-center"
-                    >
-                      {b.imagen ? (
-                        <img src={b.imagen} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div
-                          className="w-full h-full"
-                          style={{ background: 'linear-gradient(160deg,#1C1C1C,#7A5C3A)' }}
-                        />
-                      )}
+                <div key={b.id} className={`rounded-2xl shadow-tarjeta overflow-hidden ${!b.activo ? 'opacity-60' : ''}`}>
+                  <div className="relative w-full" style={{ aspectRatio: '9/16', maxHeight: 320 }}>
+                    {/* Imagem full bleed */}
+                    {b.imagen ? (
+                      <img src={b.imagen} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    ) : (
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg,#1C1C1C,#3D2B1A 60%,#7A5C3A)' }} />
+                    )}
+                    {/* Overlay */}
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 40%, rgba(0,0,0,0.75) 100%)' }} />
+
+                    {/* Badges top-left */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium backdrop-blur-sm ${b.activo ? 'bg-emerald-500/80 text-white' : 'bg-black/40 text-white/70'}`}>
+                        {b.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                      <span className="text-[10px] bg-black/40 backdrop-blur-sm text-white/80 px-2 py-0.5 rounded-full">#{b.orden}</span>
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                      <div>
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${b.activo ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                            {b.activo ? 'Activo' : 'Inactivo'}
-                          </span>
-                          <span className="text-[10px] bg-marca-beige text-marca-texto-suave px-1.5 py-0.5 rounded-full">#{b.orden}</span>
-                        </div>
-                        <p className="font-semibold text-marca-negro text-sm truncate">{b.titulo || 'Sin título'}</p>
-                        {b.subtitulo && <p className="text-xs text-marca-texto-suave truncate">{b.subtitulo}</p>}
-                        {b.botonTexto && <p className="text-[10px] text-marca-marron mt-0.5">"{b.botonTexto}"</p>}
-                      </div>
-                    </div>
-
-                    {/* Acciones */}
-                    <div className="flex flex-col gap-1 shrink-0">
-                      <button onClick={() => toggleActivo(b.id)} className="w-8 h-8 rounded-xl hover:bg-marca-beige flex items-center justify-center text-marca-texto-suave transition-colors">
+                    {/* Acciones top-right */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-1">
+                      <button onClick={() => toggleActivo(b.id)} className="w-8 h-8 rounded-xl bg-black/40 backdrop-blur-sm hover:bg-black/60 flex items-center justify-center text-white/80 transition-colors">
                         {b.activo ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
-                      <button onClick={() => setModalEditar({ ...b })} className="w-8 h-8 rounded-xl hover:bg-marca-beige flex items-center justify-center text-marca-texto-suave transition-colors">
+                      <button onClick={() => setModalEditar({ ...b })} className="w-8 h-8 rounded-xl bg-black/40 backdrop-blur-sm hover:bg-black/60 flex items-center justify-center text-white/80 transition-colors">
                         <Edit2 size={14} />
                       </button>
                       <button
                         onClick={() => { if (confirm('¿Eliminar este banner PWA?')) { eliminarBanner(b.id); toast('Banner eliminado', 'aviso') } }}
-                        className="w-8 h-8 rounded-xl hover:bg-red-50 flex items-center justify-center text-red-400 transition-colors"
+                        className="w-8 h-8 rounded-xl bg-black/40 backdrop-blur-sm hover:bg-red-500/70 flex items-center justify-center text-white/80 transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
+                    </div>
+
+                    {/* Info bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 space-y-1">
+                      {b.botonTexto && (
+                        <p className="text-[11px] text-white/70 font-medium truncate">"{b.botonTexto}"</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -411,8 +355,6 @@ export default function PWAIntro() {
             )}
           </div>
 
-          {/* ── Nota SQL ── */}
-          <NotaSQL />
         </div>
 
         {/* ── Vista previa ── */}
