@@ -328,7 +328,7 @@ function SidebarInner({ expanded, onCerrar, isDrawer, modoOscuro, toggleModoOscu
         <ThemeToggle modoOscuro={modoOscuro} toggle={toggleModoOscuro} expanded={expanded} />
 
         {/* Separador sutil */}
-        <div className="my-1 h-px bg-marca-beige-borde/40" />
+        <div className="my-1 h-px bg-marca-beige-borde/50" />
 
         <button
           onClick={onLogout}
@@ -396,10 +396,15 @@ export function Sidebar({ abierto, onCerrar, modoOscuro, toggleModoOscuro, expan
               transition={{ duration: 0.22 }}
               onClick={onCerrar}
             />
+            {/*
+              Não usamos bg-white em dark: `.dark .bg-white` (spec 0,2,0) venceria
+              `.dark aside` (spec 0,1,1) e aplicaria cor de card ao invés de surface.
+              Sem bg-white, `.dark aside { background-color: var(--dk-surface) }` aplica corretamente.
+            */}
             <motion.aside
               key="drawer"
-              className="fixed top-0 left-0 h-full w-[260px] z-50 flex flex-col lg:hidden
-                         bg-white border-r border-marca-beige-borde shadow-modal"
+              className={`fixed top-0 left-0 h-full w-[260px] z-50 flex flex-col lg:hidden border-r shadow-modal transition-colors duration-300
+                ${modoOscuro ? '' : 'bg-white border-marca-beige-borde'}`}
               initial={{ x: -260 }}
               animate={{ x: 0 }}
               exit={{ x: -260 }}
@@ -413,7 +418,8 @@ export function Sidebar({ abierto, onCerrar, modoOscuro, toggleModoOscuro, expan
 
       {/* ── Desktop: sidebar fija animada ── */}
       <motion.aside
-        className="hidden lg:flex flex-col h-screen sticky top-0 bg-white border-r border-marca-beige-borde shrink-0 overflow-hidden"
+        className={`hidden lg:flex flex-col h-screen sticky top-0 shrink-0 overflow-hidden border-r transition-colors duration-300
+          ${modoOscuro ? '' : 'bg-white border-marca-beige-borde'}`}
         animate={{ width: expandido ? 240 : 68 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >

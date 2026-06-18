@@ -94,17 +94,17 @@
    ═══════════════════════════════════════════════════════ */
 
 :root {
-  --dk-bg:       #1C1713;   /* fondo general — espresso oscuro      */
-  --dk-surface:  #252019;   /* sidebar / header — capa estructura   */
-  --dk-card:     #2E281F;   /* cards — capa contenido               */
-  --dk-raised:   #38302A;   /* bloques internos de cards            */
-  --dk-hover:    #403629;   /* hover activo                         */
-  --dk-border:   #4A3C2E;   /* bordes visibles y sutiles            */
-  --dk-text:     #EDE8DF;   /* marfil cálido — texto principal      */
-  --dk-muted:    #A89880;   /* beige grisáceo — texto secundario    */
-  --dk-muted2:   #C8BC9E;   /* texto secundario más claro           */
-  --dk-accent:   #C9A96E;   /* dorado suave — acentos               */
-  --dk-warm:     #C4A07A;   /* marrón cálido — interactivos         */
+  --dk-bg:       #181512;   /* fondo general — espresso muy oscuro  */
+  --dk-surface:  #211C18;   /* sidebar / header — capa estructura   */
+  --dk-card:     #29231E;   /* cards — capa contenido               */
+  --dk-raised:   #312920;   /* bloques internos de cards            */
+  --dk-hover:    #3A2F28;   /* hover activo                         */
+  --dk-border:   rgba(255,255,255,0.07); /* bordes sutiles cálidos  */
+  --dk-text:     #F6EFE7;   /* marfil cálido — texto principal      */
+  --dk-muted:    #B9AA9A;   /* beige grisáceo — texto secundario    */
+  --dk-muted2:   #D6C0A2;   /* texto secundario más claro           */
+  --dk-accent:   #C8A46D;   /* dorado suave — acentos               */
+  --dk-warm:     #B89067;   /* camel cálido — interactivos          */
 }
 
 .dark { color-scheme: dark; }
@@ -157,10 +157,10 @@
 /* ── Sombras con profundidad sutil ────────────────────────────────────────── */
 .dark .shadow-tarjeta {
   box-shadow:
-    0 1px 0 rgba(255,255,255,.035) inset,
-    0 4px 24px rgba(0,0,0,.50) !important;
+    0 1px 0 rgba(255,255,255,.04) inset,
+    0 2px 10px rgba(0,0,0,.25) !important;
 }
-.dark .shadow-modal   { box-shadow: 0 20px 60px rgba(0,0,0,.70) !important; }
+.dark .shadow-modal   { box-shadow: 0 16px 48px rgba(0,0,0,.55) !important; }
 
 /* ── Opacidades de marca (clases con /) ───────────────────────────────────── */
 .dark .bg-marca-marron\/10 { background-color: rgba(201,169,110,.14) !important; }
@@ -197,8 +197,8 @@
 /* ── Sombra sutil para píldoras activas (filtros, tabs) ───────────────────── */
 /* Hace que el pill "bg-white" sea visible dentro del contenedor "bg-marca-beige" */
 .dark .shadow-sm {
-  box-shadow: 0 0 0 1px rgba(255,255,255,.08),
-              0 2px 8px rgba(0,0,0,.40) !important;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.07),
+              0 1px 5px rgba(0,0,0,.22) !important;
 }
 
 /* ── Componentes ──────────────────────────────────────────────────────────── */

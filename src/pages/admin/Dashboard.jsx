@@ -90,10 +90,10 @@ function TarjetaMini({ titulo, valor, icono: Icono, nota }) {
 }
 
 /** Empty state elegante */
-function EstadoVacio({ icono: Icono, texto }) {
+function EstadoVacio({ icono: Icono, texto, compact = false }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 py-8">
-      <Icono size={28} className="text-marca-beige-borde" strokeWidth={1.5} />
+    <div className={`flex flex-col items-center justify-center gap-2 ${compact ? 'py-4' : 'py-6'}`}>
+      <Icono size={24} className="text-marca-beige-borde opacity-60" strokeWidth={1.4} />
       <p className="text-xs text-marca-texto-suave text-center max-w-[200px] leading-relaxed">{texto}</p>
     </div>
   )
@@ -116,9 +116,10 @@ export default function Dashboard() {
   const [filtro, setFiltro]   = useState('Este mes')
   const { modoOscuro }        = useAdminModoOscuro()
 
-  const grafColor = modoOscuro
-    ? { grid: '#3D3426', tick: '#9D8E7A', bg: '#2A2419' }
-    : { grid: '#F5EFE0', tick: '#9D8879', bg: '#fff'    }
+  const strokeColor = modoOscuro ? '#B89067' : '#9B7B5B'
+  const grafColor   = modoOscuro
+    ? { grid: 'rgba(255,255,255,0.06)', tick: '#B9AA9A', bg: '#29231E' }
+    : { grid: '#F5EFE0',                tick: '#9D8879', bg: '#fff'    }
 
   const productos      = useProductos(s => s.productos)
   const pedidos        = usePedidos(s => s.pedidos)
@@ -190,7 +191,7 @@ export default function Dashboard() {
               {filtro === f && (
                 <motion.span
                   layoutId="filtroActivo"
-                  className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                  className={`absolute inset-0 rounded-lg shadow-sm ${modoOscuro ? 'bg-[#3A2F28]' : 'bg-white'}`}
                   transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
               )}
@@ -293,8 +294,8 @@ export default function Dashboard() {
               <AreaChart data={datosGrafico} margin={{ top: 10, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="grdVentas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#9B7B5B" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#9B7B5B" stopOpacity={0}    />
+                    <stop offset="5%"  stopColor={strokeColor} stopOpacity={0.22} />
+                    <stop offset="95%" stopColor={strokeColor} stopOpacity={0}    />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="2 4" stroke={grafColor.grid} vertical={false} />
@@ -314,16 +315,16 @@ export default function Dashboard() {
                 <Area
                   type="monotone"
                   dataKey="ventas"
-                  stroke="#9B7B5B"
+                  stroke={strokeColor}
                   strokeWidth={2}
                   fill="url(#grdVentas)"
                   dot={false}
-                  activeDot={{ r: 4, fill: '#9B7B5B', stroke: 'white', strokeWidth: 2 }}
+                  activeDot={{ r: 4, fill: strokeColor, stroke: 'white', strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <EstadoVacio icono={BarChart3} texto="Aún no hay ventas confirmadas en este periodo" />
+            <EstadoVacio icono={BarChart3} texto="Aún no hay ventas confirmadas en este periodo" compact />
           )}
         </motion.div>
 
