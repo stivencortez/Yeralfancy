@@ -7,10 +7,10 @@ import { useToast } from '../hooks/useToast'
 import { createContext, useContext, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 
-const AdminToastCtx = createContext(null)
-export const useAdminToast = () => useContext(AdminToastCtx)
-
+const AdminToastCtx    = createContext(null)
 const AdminModoOscuroCtx = createContext(null)
+
+export const useAdminToast    = () => useContext(AdminToastCtx)
 export const useAdminModoOscuro = () => useContext(AdminModoOscuroCtx)
 
 function cargarModoOscuro() {
@@ -19,10 +19,10 @@ function cargarModoOscuro() {
 
 export function LayoutAdmin() {
   const autenticado = useAuth(s => s.autenticado)
-  const config = useConfig(s => s.config)
+  const config      = useConfig(s => s.config)
   const { toasts, agregar, quitar } = useToast()
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
-  const [modoOscuro, setModoOscuro] = useState(cargarModoOscuro)
+  const [modoOscuro, setModoOscuro]         = useState(cargarModoOscuro)
 
   const toggleModoOscuro = () => {
     setModoOscuro(prev => {
@@ -34,51 +34,75 @@ export function LayoutAdmin() {
 
   if (!autenticado) return <Navigate to="/admin/login" replace />
 
+  const logoActual = modoOscuro && config.logoDark ? config.logoDark : config.logo
+
   return (
     <AdminToastCtx.Provider value={agregar}>
       <AdminModoOscuroCtx.Provider value={{ modoOscuro, toggleModoOscuro }}>
-        <div className={`min-h-screen bg-marca-beige-suave flex${modoOscuro ? ' dark' : ''}`}>
-          <Sidebar abierto={sidebarAbierto} onCerrar={() => setSidebarAbierto(false)} />
+        <div className={`min-h-screen bg-marca-beige-suave flex transition-colors duration-300${modoOscuro ? ' dark' : ''}`}>
+
+          <Sidebar
+            abierto={sidebarAbierto}
+            onCerrar={() => setSidebarAbierto(false)}
+            modoOscuro={modoOscuro}
+          />
+
           <div className="flex-1 flex flex-col min-w-0">
-            <header className="bg-white border-b border-marca-beige-borde px-4 h-14 flex items-center gap-3 sticky top-0 z-30 shadow-[0_1px_8px_rgba(28,28,28,0.04)]">
+
+            {/* ── Top header — espeja la altura y borde del sidebar header ── */}
+            <header className="bg-white border-b border-marca-beige-borde sticky top-0 z-30 h-14 flex items-center">
+
+              {/* Botão menu mobile */}
               <button
                 onClick={() => setSidebarAbierto(true)}
-                className="lg:hidden p-2 rounded-xl hover:bg-marca-beige transition-colors"
+                className="lg:hidden flex items-center justify-center w-14 h-14 shrink-0
+                           hover:bg-marca-beige transition-colors"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6"  x2="21" y2="6"/>
+                  <line x1="3" y1="12" x2="21" y2="12"/>
+                  <line x1="3" y1="18" x2="21" y2="18"/>
                 </svg>
               </button>
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                {config.logo ? (
-                  <img
-                    src={config.logo}
-                    alt={config.nombre}
-                    className="h-8 w-auto max-w-[120px] object-contain"
-                  />
+
+              {/* Logo mobile */}
+              <div className="lg:hidden flex-1 flex items-center px-3">
+                {logoActual ? (
+                  <img src={logoActual} alt={config.nombre} className="h-8 w-auto max-w-[120px] object-contain" />
                 ) : (
-                  <div className="w-7 h-7 bg-gradient-to-br from-marca-marron to-marca-marron-oscuro rounded-lg flex items-center justify-center shrink-0">
-                    <span className="text-white font-bold text-xs">YF</span>
-                  </div>
+                  <span className="font-display font-bold text-marca-negro text-sm">{config.nombre}</span>
                 )}
-                <div className="hidden sm:flex items-center gap-1.5">
-                  <span className="font-semibold text-marca-negro text-sm">{config.nombre}</span>
-                  <span className="text-marca-beige-borde text-xs">·</span>
-                  <span className="text-xs text-marca-texto-suave">Panel Admin</span>
-                </div>
               </div>
-              <button
-                onClick={toggleModoOscuro}
-                title={modoOscuro ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-                className="p-2 rounded-xl hover:bg-marca-beige transition-colors text-marca-texto-suave hover:text-marca-negro"
-              >
-                {modoOscuro ? <Sun size={17} /> : <Moon size={17} />}
-              </button>
+
+              {/* Zona central desktop — espaço livre / pode mostrar breadcrumb futuro */}
+              <div className="hidden lg:flex flex-1 items-center px-6">
+                <span className="text-xs text-marca-texto-suave font-medium select-none">
+                  {config.nombre}
+                </span>
+              </div>
+
+              {/* Controles */}
+              <div className="flex items-center px-4 gap-1">
+                <button
+                  onClick={toggleModoOscuro}
+                  title={modoOscuro ? 'Modo claro' : 'Modo oscuro'}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl
+                             hover:bg-marca-beige transition-colors
+                             text-marca-texto-suave hover:text-marca-negro"
+                >
+                  {modoOscuro
+                    ? <Sun  size={17} strokeWidth={1.8} />
+                    : <Moon size={17} strokeWidth={1.8} />
+                  }
+                </button>
+              </div>
             </header>
+
             <main className="flex-1 p-4 lg:p-6 overflow-auto">
               <Outlet />
             </main>
           </div>
+
           <ToastContenedor toasts={toasts} quitar={quitar} />
         </div>
       </AdminModoOscuroCtx.Provider>

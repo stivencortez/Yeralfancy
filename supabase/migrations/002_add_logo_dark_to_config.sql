@@ -1,0 +1,2 @@
+ALTER TABLE public.config
+ADD COLUMN IF NOT EXISTS logo_dark TEXT DEFAULT '';

@@ -163,6 +163,7 @@ export const bannerParaDB = (obj) => ({
 export const configDeDB = (row) => ({
   nombre: row.nombre || 'Yeral fancy',
   logo: row.logo || null,
+  logoDark: row.logo_dark || null,
   descripcion: row.descripcion || '',
   whatsapp: row.whatsapp || '04243677705',
   email: row.email || '',
@@ -177,6 +178,7 @@ export const configParaDB = (obj) => ({
   id: 1,
   nombre: obj.nombre || 'Yeral fancy',
   logo: obj.logo || null,
+  logo_dark: obj.logoDark || null,
   descripcion: obj.descripcion || '',
   whatsapp: obj.whatsapp || '04243677705',
   email: obj.email || '',

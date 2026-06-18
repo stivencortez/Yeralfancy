@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS public.config (
   id          INTEGER PRIMARY KEY DEFAULT 1,
   nombre      TEXT DEFAULT 'Yeral fancy',
   logo        TEXT DEFAULT '',
+  logo_dark   TEXT DEFAULT '',
   descripcion TEXT DEFAULT '',
   whatsapp    TEXT DEFAULT '04243677705',
   email       TEXT DEFAULT 'Yeralfancy2023@gmail.com',
