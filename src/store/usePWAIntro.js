@@ -41,21 +41,25 @@ export const usePWAIntro = create(
 
       sincronizarDesdeSupabase: async () => {
         try {
-          const { data: cfg } = await supabase
+          const { data: cfg, error } = await supabase
             .from('pwa_intro_config')
             .select('*')
             .eq('id', 1)
             .single()
-          if (cfg) {
+          if (!error && cfg) {
             set({ config: { habilitado: cfg.habilitado, modoVisualizacion: cfg.modo_visualizacion } })
           }
         } catch {}
         try {
-          const { data: rows } = await supabase
+          const { data: rows, error } = await supabase
             .from('pwa_intro_banners')
             .select('*')
             .order('orden')
-          if (rows) set({ banners: rows.map(bannerDeDB) })
+          // Only replace local banners if Supabase returns real data (rows.length > 0)
+          // This prevents wiping localStorage when tables don't exist or RLS blocks access
+          if (!error && rows && rows.length > 0) {
+            set({ banners: rows.map(bannerDeDB) })
+          }
         } catch {}
       },
 
@@ -71,16 +75,17 @@ export const usePWAIntro = create(
         } catch {}
       },
 
-      agregarBanner: (datos) => {
+      agregarBanner: async (datos) => {
         const nuevo = { ...datos, id: generarId(), creadoEn: new Date().toISOString() }
         set(s => ({ banners: [...s.banners, nuevo] }))
-        supabase.from('pwa_intro_banners').insert(bannerParaDB(nuevo)).catch(() => {})
+        const { error } = await supabase.from('pwa_intro_banners').insert(bannerParaDB(nuevo))
+        if (error) console.warn('[PWAIntro] Supabase insert error:', error.message)
       },
 
       editarBanner: (id, datos) => {
         set(s => ({ banners: s.banners.map(b => b.id === id ? { ...b, ...datos } : b) }))
         const b = get().banners.find(x => x.id === id)
-        if (b) supabase.from('pwa_intro_banners').update(bannerParaDB(b)).eq('id', id).catch(() => {})
+        if (b) supabase.from('pwa_intro_banners').update(bannerParaDB(b)).eq('id', id).catch((e) => console.warn('[PWAIntro] Supabase update error:', e))
       },
 
       eliminarBanner: (id) => {
