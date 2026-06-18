@@ -24,6 +24,7 @@ import Banners from './pages/admin/Banners'
 import Clientes from './pages/admin/Clientes'
 import Metricas from './pages/admin/Metricas'
 import Configuracion from './pages/admin/Configuracion'
+import PWAIntro from './pages/admin/PWAIntro'
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="inventario" element={<Inventario />} />
           <Route path="pedidos" element={<Pedidos />} />
           <Route path="banners" element={<Banners />} />
+          <Route path="pwa-intro" element={<PWAIntro />} />
           <Route path="clientes" element={<Clientes />} />
           <Route path="metricas" element={<Metricas />} />
           <Route path="configuracion" element={<Configuracion />} />

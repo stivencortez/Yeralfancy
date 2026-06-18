@@ -5,6 +5,7 @@ import { BotonWhatsApp } from '../components/tienda/BotonWhatsApp'
 import { ToastContenedor } from '../components/ui/Toast'
 import { useToast } from '../hooks/useToast'
 import { createContext, useContext } from 'react'
+import PWAIntroGate from '../components/pwa/PWAIntroGate'
 
 const ToastCtx = createContext(null)
 export const useTiendaToast = () => useContext(ToastCtx)
@@ -22,6 +23,7 @@ export function LayoutTienda() {
         <BarraInferior />
         <BotonWhatsApp />
         <ToastContenedor toasts={toasts} quitar={quitar} />
+        <PWAIntroGate />
       </div>
     </ToastCtx.Provider>
   )

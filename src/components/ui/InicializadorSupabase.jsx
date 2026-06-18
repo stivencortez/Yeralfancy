@@ -6,6 +6,7 @@ import { useClientes } from '../../store/useClientes'
 import { useBanners } from '../../store/useBanners'
 import { useConfig } from '../../store/useConfig'
 import { useAuth } from '../../store/useAuth'
+import { usePWAIntro } from '../../store/usePWAIntro'
 import { supabase } from '../../lib/supabase'
 
 const CLEANUP_KEY = 'yf-cleanup-ficticios-v1'
@@ -21,6 +22,7 @@ export default function InicializadorSupabase() {
   const sincBanners    = useBanners(s => s.sincronizarDesdeSupabase)
   const sincConfig     = useConfig(s => s.sincronizarDesdeSupabase)
   const sincAuth       = useAuth(s => s.sincronizarDesdeSupabase)
+  const sincPWAIntro   = usePWAIntro(s => s.sincronizarDesdeSupabase)
 
   useEffect(() => {
     const inicializar = async () => {
@@ -44,6 +46,7 @@ export default function InicializadorSupabase() {
         sincBanners(),
         sincConfig(),
         sincAuth(),
+        sincPWAIntro(),
       ])
       sincPedidos()
       sincClientes()

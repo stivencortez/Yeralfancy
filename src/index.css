@@ -85,6 +85,20 @@
   .text-balance { text-wrap: balance; }
 }
 
+/* ── PWA Intro animations ── */
+@keyframes pwaChevron {
+  0%, 100% { transform: translateX(0); opacity: 0.5; }
+  50%       { transform: translateX(4px); opacity: 1; }
+}
+@keyframes pwaThumbHint {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(9px); }
+}
+.pwa-chevron {
+  display: inline-block;
+  animation: pwaChevron 1.2s ease-in-out infinite;
+}
+
 /* ═══════════════════════════════════════════════════════
    MODO OSCURO  —  paleta boutique cálida
    (.dark aplicado en el wrapper root de LayoutAdmin)

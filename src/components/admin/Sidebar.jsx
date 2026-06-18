@@ -4,7 +4,7 @@ import { useConfig } from '../../store/useConfig'
 import {
   LayoutDashboard, Package, Tag, Warehouse, ShoppingCart,
   Image, Users, BarChart2, Settings, LogOut, Globe,
-  ChevronLeft, ChevronRight, Sun, Moon,
+  ChevronLeft, ChevronRight, Sun, Moon, Smartphone,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -23,7 +23,8 @@ const GRUPOS = [
       { a: '/admin/productos',  icono: Package,   etiqueta: 'Productos' },
       { a: '/admin/categorias', icono: Tag,       etiqueta: 'Categorías' },
       { a: '/admin/inventario', icono: Warehouse, etiqueta: 'Inventario' },
-      { a: '/admin/banners',    icono: Image,     etiqueta: 'Banners' },
+      { a: '/admin/banners',    icono: Image,       etiqueta: 'Banners' },
+      { a: '/admin/pwa-intro', icono: Smartphone,  etiqueta: 'Pantalla PWA' },
     ],
   },
   {

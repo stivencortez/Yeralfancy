@@ -43,6 +43,8 @@ export default {
         'fade-in': 'fadeIn 0.2s ease-out',
         'bounce-in': 'bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'shimmer': 'shimmer 1.5s infinite',
+        'pwa-chevron': 'pwaChevron 1.2s ease-in-out infinite',
+        'pwa-thumb-hint': 'pwaThumbHint 2.2s ease-in-out 1.5s infinite',
       },
       keyframes: {
         slideUp: {
@@ -60,6 +62,14 @@ export default {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        pwaChevron: {
+          '0%, 100%': { transform: 'translateX(0)', opacity: '0.5' },
+          '50%': { transform: 'translateX(4px)', opacity: '1' },
+        },
+        pwaThumbHint: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '50%': { transform: 'translateX(9px)' },
         },
       },
     },
