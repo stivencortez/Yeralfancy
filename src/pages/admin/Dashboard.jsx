@@ -258,20 +258,21 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="space-y-2">
-              {agotados.map(p => (
-                <div key={p.id} className="flex items-center justify-between p-2.5 bg-red-50/60 rounded-xl">
-                  <span className="text-sm text-marca-negro">{p.nombre}</span>
-                  <span className="text-[10px] font-semibold text-red-600 bg-red-100 px-2.5 py-1 rounded-full">Agotado</span>
-                </div>
-              ))}
-              {bajoStock.map(p => (
-                <div key={p.id} className="flex items-center justify-between p-2.5 bg-amber-50/60 rounded-xl">
-                  <div className="min-w-0">
-                    <p className="text-sm text-marca-negro">{p.nombre}</p>
-                    <p className="text-[11px] text-marca-texto-suave">Solo {p.stock} {p.stock === 1 ? 'unidad' : 'unidades'}</p>
+              {[...agotados.map(p => ({ ...p, _tipo: 'agotado' })), ...bajoStock.map(p => ({ ...p, _tipo: 'bajo' }))].slice(0, 3).map(p => (
+                p._tipo === 'agotado' ? (
+                  <div key={p.id} className="flex items-center justify-between p-2.5 bg-red-50/60 rounded-xl">
+                    <span className="text-sm text-marca-negro">{p.nombre}</span>
+                    <span className="text-[10px] font-semibold text-red-600 bg-red-100 px-2.5 py-1 rounded-full">Agotado</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full ml-3 shrink-0">Bajo stock</span>
-                </div>
+                ) : (
+                  <div key={p.id} className="flex items-center justify-between p-2.5 bg-amber-50/60 rounded-xl">
+                    <div className="min-w-0">
+                      <p className="text-sm text-marca-negro">{p.nombre}</p>
+                      <p className="text-[11px] text-marca-texto-suave">Solo {p.stock} {p.stock === 1 ? 'unidad' : 'unidades'}</p>
+                    </div>
+                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full ml-3 shrink-0">Bajo stock</span>
+                  </div>
+                )
               ))}
             </div>
           </motion.div>
