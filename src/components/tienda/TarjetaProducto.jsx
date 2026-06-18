@@ -44,10 +44,10 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
             </div>
           )}
 
-          {/* Botón favorito */}
+          {/* Botón favorito — esquina superior izquierda */}
           <button
             onClick={manejarFavorito}
-            className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-all duration-200
+            className={`absolute top-2.5 left-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-all duration-200
               ${esFav ? 'bg-marca-negro' : 'bg-white/90 backdrop-blur-sm'}`}
           >
             <Heart

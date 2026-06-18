@@ -1,4 +1,4 @@
-import { Home, Grid3x3, ShoppingBag, Heart, User } from 'lucide-react'
+import { Home, Search, ShoppingBag, Heart, User } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { useCarrito } from '../../store/useCarrito'
 import { useFavoritos } from '../../store/useFavoritos'
@@ -9,7 +9,7 @@ export function BarraInferior() {
 
   const items = [
     { a: '/', icono: Home, etiqueta: 'Inicio', exacto: true },
-    { a: '/categorias', icono: Grid3x3, etiqueta: 'Categorías' },
+    { a: '/buscar', icono: Search, etiqueta: 'Buscar' },
     { a: '/carrito', icono: ShoppingBag, etiqueta: 'Carrito', badge: totalItems },
     { a: '/favoritos', icono: Heart, etiqueta: 'Favoritos', badge: favoritos.length },
     { a: '/sobre', icono: User, etiqueta: 'Más' },
