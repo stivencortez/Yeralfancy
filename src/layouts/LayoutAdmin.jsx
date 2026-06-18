@@ -7,28 +7,38 @@ import { useToast } from '../hooks/useToast'
 import { createContext, useContext, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 
-const AdminToastCtx    = createContext(null)
+const AdminToastCtx      = createContext(null)
 const AdminModoOscuroCtx = createContext(null)
 
-export const useAdminToast    = () => useContext(AdminToastCtx)
+export const useAdminToast      = () => useContext(AdminToastCtx)
 export const useAdminModoOscuro = () => useContext(AdminModoOscuroCtx)
 
-function cargarModoOscuro() {
-  try { return localStorage.getItem('admin-modo-oscuro') === 'true' } catch { return false }
+function cargarBool(key, def = false) {
+  try { return localStorage.getItem(key) === 'true' } catch { return def }
 }
 
 export function LayoutAdmin() {
   const autenticado = useAuth(s => s.autenticado)
   const config      = useConfig(s => s.config)
   const { toasts, agregar, quitar } = useToast()
+
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
-  const [modoOscuro, setModoOscuro]         = useState(cargarModoOscuro)
+  const [modoOscuro,     setModoOscuro]     = useState(() => cargarBool('admin-modo-oscuro'))
+  const [expandido,      setExpandido]      = useState(() => cargarBool('admin-sidebar-expandida', true))
 
   const toggleModoOscuro = () => {
     setModoOscuro(prev => {
-      const nuevo = !prev
-      try { localStorage.setItem('admin-modo-oscuro', String(nuevo)) } catch {}
-      return nuevo
+      const v = !prev
+      try { localStorage.setItem('admin-modo-oscuro', String(v)) } catch {}
+      return v
+    })
+  }
+
+  const toggleExpandido = () => {
+    setExpandido(prev => {
+      const v = !prev
+      try { localStorage.setItem('admin-sidebar-expandida', String(v)) } catch {}
+      return v
     })
   }
 
@@ -45,17 +55,20 @@ export function LayoutAdmin() {
             abierto={sidebarAbierto}
             onCerrar={() => setSidebarAbierto(false)}
             modoOscuro={modoOscuro}
+            toggleModoOscuro={toggleModoOscuro}
+            expandido={expandido}
+            onToggleExpandido={toggleExpandido}
           />
 
           <div className="flex-1 flex flex-col min-w-0">
 
-            {/* ── Top header — espeja la altura y borde del sidebar header ── */}
-            <header className="bg-white border-b border-marca-beige-borde sticky top-0 z-30 h-14 flex items-center">
+            {/* ── Header ── */}
+            <header className="bg-white border-b border-marca-beige-borde sticky top-0 z-30 h-[60px] flex items-center">
 
-              {/* Botão menu mobile */}
+              {/* Botón menú mobile */}
               <button
                 onClick={() => setSidebarAbierto(true)}
-                className="lg:hidden flex items-center justify-center w-14 h-14 shrink-0
+                className="lg:hidden flex items-center justify-center w-[60px] h-[60px] shrink-0
                            hover:bg-marca-beige transition-colors"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
@@ -74,15 +87,15 @@ export function LayoutAdmin() {
                 )}
               </div>
 
-              {/* Zona central desktop — espaço livre / pode mostrar breadcrumb futuro */}
+              {/* Zona central desktop */}
               <div className="hidden lg:flex flex-1 items-center px-6">
                 <span className="text-xs text-marca-texto-suave font-medium select-none">
                   {config.nombre}
                 </span>
               </div>
 
-              {/* Controles */}
-              <div className="flex items-center px-4 gap-1">
+              {/* Toggle tema — solo mobile (en desktop está en sidebar) */}
+              <div className="flex items-center px-4 lg:hidden">
                 <button
                   onClick={toggleModoOscuro}
                   title={modoOscuro ? 'Modo claro' : 'Modo oscuro'}

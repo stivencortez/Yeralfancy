@@ -86,75 +86,132 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   MODO OSCURO  —  paleta cálida a la marca
-   (.dark puesto en el wrapper root de LayoutAdmin)
+   MODO OSCURO  —  paleta boutique cálida
+   (.dark aplicado en el wrapper root de LayoutAdmin)
+
+   Jerarquía de capas:
+   bg (más profundo) → surface (sidebar/header) → card → raised (bloques internos)
    ═══════════════════════════════════════════════════════ */
 
-/* Paleta base */
 :root {
-  --dk-bg:        #1A1512;
-  --dk-surface:   #221D17;
-  --dk-card:      #2A2419;
-  --dk-hover:     #322B1F;
-  --dk-border:    #3D3426;
-  --dk-text:      #EDE8E0;
-  --dk-muted:     #9D8E7A;
-  --dk-accent:    #C9A96E;
-  --dk-marron:    #B89070;
+  --dk-bg:       #1C1713;   /* fondo general — espresso oscuro      */
+  --dk-surface:  #252019;   /* sidebar / header — capa estructura   */
+  --dk-card:     #2E281F;   /* cards — capa contenido               */
+  --dk-raised:   #38302A;   /* bloques internos de cards            */
+  --dk-hover:    #403629;   /* hover activo                         */
+  --dk-border:   #4A3C2E;   /* bordes visibles y sutiles            */
+  --dk-text:     #EDE8DF;   /* marfil cálido — texto principal      */
+  --dk-muted:    #A89880;   /* beige grisáceo — texto secundario    */
+  --dk-muted2:   #C8BC9E;   /* texto secundario más claro           */
+  --dk-accent:   #C9A96E;   /* dorado suave — acentos               */
+  --dk-warm:     #C4A07A;   /* marrón cálido — interactivos         */
 }
 
 .dark { color-scheme: dark; }
 
-/* ── Fondos ── */
-.dark .bg-white              { background-color: var(--dk-card) !important; }
-.dark .bg-marca-beige-suave  { background-color: var(--dk-bg)   !important; }
-.dark .bg-marca-fondo        { background-color: var(--dk-bg)   !important; }
-.dark .bg-marca-beige        { background-color: var(--dk-surface) !important; }
-.dark .bg-marca-beige-borde  { background-color: var(--dk-border)  !important; }
+/* ── Estructura: sidebar y header tienen capa propia ──────────────────────── */
+/* Esto diferencia la "armazón" del layout (surface) de los cards de contenido */
+.dark aside  { background-color: var(--dk-surface) !important; border-color: var(--dk-border) !important; }
+.dark header { background-color: var(--dk-surface) !important; border-color: var(--dk-border) !important; }
 
-/* ── Textos ── */
-.dark .text-marca-negro       { color: var(--dk-text)   !important; }
-.dark .text-marca-texto       { color: var(--dk-text)   !important; }
-.dark .text-marca-texto-suave { color: var(--dk-muted)  !important; }
-.dark .text-marca-marron      { color: var(--dk-marron) !important; }
+/* ── Fondos generales ─────────────────────────────────────────────────────── */
+.dark .bg-white              { background-color: var(--dk-card)   !important; }
+.dark .bg-marca-beige-suave  { background-color: var(--dk-bg)     !important; }
+.dark .bg-marca-fondo        { background-color: var(--dk-bg)     !important; }
+.dark .bg-marca-beige        { background-color: var(--dk-raised) !important; }
+.dark .bg-marca-beige-borde  { background-color: var(--dk-border) !important; }
+
+/* ── Textos ───────────────────────────────────────────────────────────────── */
+.dark .text-marca-negro         { color: var(--dk-text)   !important; }
+.dark .text-marca-texto         { color: var(--dk-text)   !important; }
+.dark .text-marca-texto-suave   { color: var(--dk-muted)  !important; }
+.dark .text-marca-marron        { color: var(--dk-warm)   !important; }
 .dark .text-marca-marron-oscuro { color: var(--dk-accent) !important; }
+.dark .text-marca-dorado        { color: var(--dk-accent) !important; }
 
-/* ── Bordes ── */
-.dark .border-marca-beige-borde { border-color: var(--dk-border) !important; }
+/* ── Bordes ───────────────────────────────────────────────────────────────── */
+.dark .border-marca-beige-borde { border-color: var(--dk-border)            !important; }
+.dark .border-amber-100         { border-color: rgba(201,150,60,.20)         !important; }
+.dark .border-amber-200         { border-color: rgba(201,150,60,.28)         !important; }
 
-/* ── Hovers ── */
-.dark .hover\:bg-marca-beige:hover       { background-color: var(--dk-hover)  !important; }
-.dark .hover\:bg-marca-beige\/50:hover   { background-color: rgba(50,43,31,.5) !important; }
-.dark .hover\:bg-marca-beige\/60:hover   { background-color: rgba(50,43,31,.6) !important; }
-.dark .hover\:bg-marca-beige\/70:hover   { background-color: rgba(50,43,31,.7) !important; }
-.dark .hover\:bg-marca-beige\/20:hover   { background-color: rgba(50,43,31,.2) !important; }
-.dark .hover\:text-marca-negro:hover     { color: var(--dk-text) !important; }
-.dark .hover\:bg-red-50:hover            { background-color: rgba(239,68,68,.12) !important; }
-.dark .hover\:border-marca-marron:hover  { border-color: var(--dk-marron) !important; }
-.dark .hover\:border-marca-marron\/50:hover { border-color: rgba(184,144,112,.5) !important; }
+/* ── Hovers ───────────────────────────────────────────────────────────────── */
+.dark .hover\:bg-marca-beige:hover          { background-color: var(--dk-hover)          !important; }
+.dark .hover\:bg-marca-beige\/20:hover      { background-color: rgba(64,54,41,.30)        !important; }
+.dark .hover\:bg-marca-beige\/30:hover      { background-color: rgba(64,54,41,.55)        !important; }
+.dark .hover\:bg-marca-beige\/50:hover      { background-color: rgba(64,54,41,.55)        !important; }
+.dark .hover\:bg-marca-beige\/60:hover      { background-color: rgba(64,54,41,.60)        !important; }
+.dark .hover\:bg-marca-beige\/70:hover      { background-color: rgba(64,54,41,.70)        !important; }
+.dark .hover\:text-marca-negro:hover        { color: var(--dk-text)                       !important; }
+.dark .hover\:text-marca-marron-oscuro:hover{ color: var(--dk-accent)                     !important; }
+.dark .hover\:bg-red-50:hover               { background-color: rgba(220,38,38,.15)       !important; }
+.dark .hover\:text-red-600:hover            { color: #F08080                              !important; }
+.dark .hover\:border-marca-marron:hover     { border-color: var(--dk-warm)                !important; }
+.dark .hover\:border-marca-marron\/50:hover { border-color: rgba(196,160,122,.50)         !important; }
+.dark .hover\:bg-amber-100:hover            { background-color: rgba(201,150,60,.18)      !important; }
+.dark .hover\:bg-green-100:hover            { background-color: rgba(34,197,94,.14)       !important; }
 
-/* ── Focus ── */
-.dark .focus\:bg-white:focus          { background-color: var(--dk-bg) !important; }
-.dark .focus\:border-marca-marron:focus { border-color: var(--dk-marron) !important; }
+/* ── Focus ────────────────────────────────────────────────────────────────── */
+.dark .focus\:bg-white:focus           { background-color: var(--dk-bg)   !important; }
+.dark .focus\:border-marca-marron:focus{ border-color: var(--dk-warm)     !important; }
 
-/* ── Sombras ── */
-.dark .shadow-tarjeta { box-shadow: 0 2px 16px rgba(0,0,0,.45) !important; }
-.dark .shadow-modal   { box-shadow: 0 20px 60px rgba(0,0,0,.65) !important; }
-.dark .shadow-\[0_1px_8px_rgba\(28\2c 28\2c 28\2c 0\.04\)\] {
-  box-shadow: 0 1px 8px rgba(0,0,0,.35) !important;
+/* ── Sombras con profundidad sutil ────────────────────────────────────────── */
+.dark .shadow-tarjeta {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.035) inset,
+    0 4px 24px rgba(0,0,0,.50) !important;
+}
+.dark .shadow-modal   { box-shadow: 0 20px 60px rgba(0,0,0,.70) !important; }
+
+/* ── Opacidades de marca (clases con /) ───────────────────────────────────── */
+.dark .bg-marca-marron\/10 { background-color: rgba(201,169,110,.14) !important; }
+.dark .bg-marca-dorado\/15 { background-color: rgba(201,169,110,.20) !important; }
+.dark .bg-marca-beige\/30  { background-color: rgba(64,54,41,.50)    !important; }
+.dark .bg-marca-beige\/60  { background-color: rgba(64,54,41,.45)    !important; }
+
+/* ── Alertas — amber (advertencia) ───────────────────────────────────────── */
+.dark .bg-amber-50       { background-color: rgba(196,144,54,.10) !important; }
+.dark .bg-amber-50\/60   { background-color: rgba(196,144,54,.12) !important; }
+.dark .bg-amber-100      { background-color: rgba(196,144,54,.20) !important; }
+.dark .text-amber-600    { color: #D4A45A !important; }
+.dark .text-amber-700    { color: #C9953E !important; }
+.dark .text-amber-800    { color: #E0B060 !important; }
+
+/* ── Alertas — red (error/agotado) ───────────────────────────────────────── */
+.dark .bg-red-50         { background-color: rgba(200,50,50,.10)  !important; }
+.dark .bg-red-50\/60     { background-color: rgba(200,50,50,.12)  !important; }
+.dark .bg-red-100        { background-color: rgba(200,50,50,.20)  !important; }
+.dark .text-red-400      { color: #F87171 !important; }
+.dark .text-red-600      { color: #E07070 !important; }
+.dark .text-red-700      { color: #D46060 !important; }
+
+/* ── Divisores y opacidades adicionales ───────────────────────────────────── */
+.dark .divide-marca-beige-borde\/50 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(74,60,46,.55) !important;
+}
+/* Divisores tipo hr / h-px */
+.dark .bg-marca-beige-borde\/60  { background-color: rgba(74,60,46,.55)   !important; }
+.dark .bg-marca-beige-borde\/50  { background-color: rgba(74,60,46,.50)   !important; }
+/* Label de grupos en sidebar (.text-marca-texto-suave/50) */
+.dark .text-marca-texto-suave\/50 { color: rgba(168,152,128,.55)           !important; }
+
+/* ── Sombra sutil para píldoras activas (filtros, tabs) ───────────────────── */
+/* Hace que el pill "bg-white" sea visible dentro del contenedor "bg-marca-beige" */
+.dark .shadow-sm {
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08),
+              0 2px 8px rgba(0,0,0,.40) !important;
 }
 
-/* ── Componentes ── */
+/* ── Componentes ──────────────────────────────────────────────────────────── */
 .dark .input-campo {
-  background-color: var(--dk-surface) !important;
-  border-color:     var(--dk-border)  !important;
-  color:            var(--dk-text)    !important;
+  background-color: var(--dk-raised) !important;
+  border-color:     var(--dk-border) !important;
+  color:            var(--dk-text)   !important;
   color-scheme: dark;
 }
 .dark .input-campo::placeholder { color: var(--dk-muted) !important; }
 .dark .input-campo:focus {
-  border-color:     var(--dk-marron) !important;
-  background-color: var(--dk-bg)     !important;
+  border-color:     var(--dk-warm) !important;
+  background-color: var(--dk-card) !important;
 }
 
 .dark .btn-outline {
@@ -162,29 +219,25 @@
   border-color: var(--dk-border) !important;
 }
 .dark .btn-outline:hover {
-  border-color: var(--dk-marron) !important;
+  border-color: var(--dk-warm)   !important;
   color:        var(--dk-accent) !important;
 }
 
-.dark .etiqueta { color: #d4cec7 !important; }
+.dark .etiqueta { color: var(--dk-muted2) !important; }
 .dark .tarjeta  { background-color: var(--dk-card) !important; }
 
-/* ── Colores de estado/badge ── */
-.dark .bg-amber-50   { background-color: rgba(245,158,11,.08) !important; }
-.dark .border-amber-200 { border-color: rgba(245,158,11,.2)  !important; }
-.dark .text-amber-800   { color: #fbbf24 !important; }
-.dark .text-amber-700   { color: #f59e0b !important; }
-.dark .bg-amber-100     { background-color: rgba(245,158,11,.15) !important; }
-.dark .text-red-700     { color: #f87171 !important; }
-.dark .bg-red-100       { background-color: rgba(239,68,68,.15) !important; }
-.dark .hover\:bg-green-100:hover  { background-color: rgba(34,197,94,.12)  !important; }
-.dark .hover\:bg-amber-100:hover  { background-color: rgba(245,158,11,.12) !important; }
+/* ── Misceláneos ──────────────────────────────────────────────────────────── */
+.dark .ring-2       { --tw-ring-color: rgba(201,169,110,.28) !important; }
+.dark select option { background-color: var(--dk-card); color: var(--dk-text); }
 
-/* ── Misceláneos ── */
-.dark .bg-marca-marron\/10 { background-color: rgba(201,169,110,.12) !important; }
-.dark .ring-2              { --tw-ring-color: rgba(201,169,110,.25)  !important; }
-.dark select option        { background-color: var(--dk-card); color: var(--dk-text); }
-
-/* Scrollbar dark */
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
 .dark ::-webkit-scrollbar-track { background: var(--dk-surface); }
 .dark ::-webkit-scrollbar-thumb { background: var(--dk-border);  }
+
+/* ── Sidebar premium overrides (dark) ────────────────────────────────────── */
+/* Active nav item — usa bg-marca-beige que en dark ya se mapea, pero forzamos */
+.dark .bg-marca-beige { background-color: var(--dk-hover) !important; }
+/* Red hover en sidebar footer */
+.dark .hover\:bg-red-50:hover { background-color: rgba(220,60,60,.14) !important; }
+/* Sidebar sticky desktop: fija al top */
+aside.sticky { align-self: flex-start; }

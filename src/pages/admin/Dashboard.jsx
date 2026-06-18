@@ -1,6 +1,14 @@
 import { useState } from 'react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { ShoppingCart, DollarSign, TrendingUp, Package, Users, AlertTriangle, Star } from 'lucide-react'
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from 'recharts'
+import {
+  DollarSign, TrendingUp, ShoppingBag, Users, Package,
+  Clock, BarChart3, AlertTriangle, Star, ArrowRight,
+  CheckCircle2, XCircle,
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useProductos } from '../../store/useProductos'
 import { usePedidos } from '../../store/usePedidos'
 import { useClientes } from '../../store/useClientes'
@@ -8,22 +16,18 @@ import { formatearPrecio, estadoColor, formatearFechaHora } from '../../utils/fo
 import { Link } from 'react-router-dom'
 import { useAdminModoOscuro } from '../../layouts/LayoutAdmin'
 
-const FILTROS = ['Hoy', 'Esta semana', 'Este mes']
-
-function TarjetaMetrica({ titulo, valor, icono: Icono, color = 'bg-marca-marron', subtitulo }) {
-  return (
-    <div className="bg-white rounded-2xl p-4 shadow-tarjeta">
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center`}>
-          <Icono size={20} className="text-white" />
-        </div>
-      </div>
-      <p className="text-2xl font-bold text-marca-negro">{valor}</p>
-      <p className="text-xs text-marca-texto-suave mt-0.5">{titulo}</p>
-      {subtitulo && <p className="text-xs text-marca-marron mt-0.5 font-medium">{subtitulo}</p>}
-    </div>
-  )
+/* ─── Animaciones ─────────────────────────────────────────────────────────── */
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.055 } },
 }
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.28, ease: 'easeOut' } },
+}
+
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+const FILTROS = ['Hoy', 'Esta semana', 'Este mes']
 
 function calcularRangos(filtro) {
   const ahora = new Date()
@@ -31,8 +35,7 @@ function calcularRangos(filtro) {
   if (filtro === 'Hoy') {
     inicio.setHours(0, 0, 0, 0)
   } else if (filtro === 'Esta semana') {
-    const dia = inicio.getDay()
-    inicio.setDate(inicio.getDate() - dia)
+    inicio.setDate(inicio.getDate() - inicio.getDay())
     inicio.setHours(0, 0, 0, 0)
   } else {
     inicio.setDate(1)
@@ -41,31 +44,105 @@ function calcularRangos(filtro) {
   return { inicio, fin: ahora }
 }
 
+/* ─── Componentes locales ─────────────────────────────────────────────────── */
+
+/** Tarjeta financiera grande (Facturación / Ganancia) */
+function TarjetaFinanciera({ titulo, valor, icono: Icono, nota, acento = false }) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
+      className="relative bg-white rounded-2xl shadow-tarjeta p-5 overflow-hidden"
+    >
+      {acento && (
+        <div className="absolute inset-y-0 left-0 w-[3px] bg-gradient-to-b from-marca-dorado to-marca-marron rounded-l-2xl" />
+      )}
+      <div className="flex items-start justify-between mb-4">
+        <div className="w-10 h-10 bg-marca-beige rounded-xl flex items-center justify-center">
+          <Icono size={18} className="text-marca-marron" strokeWidth={1.8} />
+        </div>
+        {nota && (
+          <span className="text-[10px] font-semibold text-marca-texto-suave bg-marca-beige px-2 py-1 rounded-full">
+            {nota}
+          </span>
+        )}
+      </div>
+      <p className="text-3xl font-bold text-marca-negro tracking-tight">{valor}</p>
+      <p className="text-xs text-marca-texto-suave mt-1.5 font-medium">{titulo}</p>
+    </motion.div>
+  )
+}
+
+/** Tarjeta operacional compacta */
+function TarjetaMini({ titulo, valor, icono: Icono, nota }) {
+  return (
+    <motion.div
+      variants={fadeUp}
+      whileHover={{ y: -1, transition: { duration: 0.15 } }}
+      className="bg-white rounded-xl shadow-tarjeta p-4"
+    >
+      <Icono size={15} className="text-marca-texto-suave mb-3" strokeWidth={1.7} />
+      <p className="text-xl font-bold text-marca-negro leading-none">{valor}</p>
+      <p className="text-[11px] text-marca-texto-suave mt-1.5 leading-tight">{titulo}</p>
+      {nota && <p className="text-[10px] text-marca-marron font-medium mt-1">{nota}</p>}
+    </motion.div>
+  )
+}
+
+/** Empty state elegante */
+function EstadoVacio({ icono: Icono, texto }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 py-8">
+      <Icono size={28} className="text-marca-beige-borde" strokeWidth={1.5} />
+      <p className="text-xs text-marca-texto-suave text-center max-w-[200px] leading-relaxed">{texto}</p>
+    </div>
+  )
+}
+
+/** Tooltip personalizado para el gráfico */
+function TooltipGrafico({ active, payload, label, modoOscuro }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className={`rounded-xl border px-3 py-2 shadow-tarjeta text-xs
+      ${modoOscuro ? 'bg-[#2A2419] border-[#3D3426] text-[#EDE8E0]' : 'bg-white border-marca-beige-borde text-marca-negro'}`}>
+      <p className="font-semibold mb-1">{label}</p>
+      <p>{formatearPrecio(payload[0]?.value || 0)}</p>
+    </div>
+  )
+}
+
+/* ─── Dashboard principal ─────────────────────────────────────────────────── */
 export default function Dashboard() {
-  const [filtro, setFiltro] = useState('Este mes')
-  const { modoOscuro } = useAdminModoOscuro()
+  const [filtro, setFiltro]   = useState('Este mes')
+  const { modoOscuro }        = useAdminModoOscuro()
+
   const grafColor = modoOscuro
-    ? { grid: '#374151', tick: '#9ca3af', border: '#374151' }
-    : { grid: '#F5EFE0', tick: '#7A6B5E', border: '#E8D8C0' }
-  const productos = useProductos(s => s.productos)
-  const pedidos = usePedidos(s => s.pedidos)
-  const clientes = useClientes(s => s.clientes)
+    ? { grid: '#3D3426', tick: '#9D8E7A', bg: '#2A2419' }
+    : { grid: '#F5EFE0', tick: '#9D8879', bg: '#fff'    }
+
+  const productos      = useProductos(s => s.productos)
+  const pedidos        = usePedidos(s => s.pedidos)
+  const clientes       = useClientes(s => s.clientes)
   const getFacturacion = usePedidos(s => s.getFacturacionPeriodo)
 
-  const { inicio, fin } = calcularRangos(filtro)
+  const { inicio, fin }              = calcularRangos(filtro)
   const { total: facturacion, ganancia } = getFacturacion(inicio, fin)
 
-  const pendientes = pedidos.filter(p => p.estado === 'Pendiente').length
-  const pagados = pedidos.filter(p => p.estado === 'Pago').length
-  const noFinalizados = pedidos.filter(p => p.estado === 'No finalizado').length
+  const pendientes      = pedidos.filter(p => p.estado === 'Pendiente').length
+  const pagados         = pedidos.filter(p => p.estado === 'Pago').length
+  const noFinalizados   = pedidos.filter(p => p.estado === 'No finalizado').length
   const productosActivos = productos.filter(p => p.activo).length
-  const agotados = productos.filter(p => p.activo && p.stock === 0)
-  const bajoStock = productos.filter(p => p.activo && p.stock > 0 && p.stock <= p.stockMinimo)
+  const agotados        = productos.filter(p => p.activo && p.stock === 0)
+  const bajoStock       = productos.filter(p => p.activo && p.stock > 0 && p.stock <= p.stockMinimo)
 
-  const masVendidos = [...productos].sort((a, b) => (b.vendidos || 0) - (a.vendidos || 0)).slice(0, 5)
+  const masVendidos = [...productos]
+    .sort((a, b) => (b.vendidos || 0) - (a.vendidos || 0))
+    .slice(0, 5)
 
-  const pedidosPago = pedidos.filter(p => p.estado === 'Pago')
-  const ticketPromedio = pedidosPago.length ? pedidosPago.reduce((a, p) => a + p.total, 0) / pedidosPago.length : 0
+  const pedidosPago   = pedidos.filter(p => p.estado === 'Pago')
+  const ticketPromedio = pedidosPago.length
+    ? pedidosPago.reduce((a, p) => a + p.total, 0) / pedidosPago.length
+    : 0
 
   const pedidosRecientes = pedidos.slice(0, 6)
 
@@ -75,153 +152,271 @@ export default function Dashboard() {
       const d = new Date()
       d.setDate(d.getDate() - i)
       d.setHours(0, 0, 0, 0)
-      const fin = new Date(d)
-      fin.setHours(23, 59, 59)
-      const { total, ganancia } = getFacturacion(d, fin)
-      dias.push({
-        dia: d.toLocaleDateString('es-VE', { weekday: 'short' }),
-        ventas: total,
-        ganancia,
-      })
+      const f = new Date(d); f.setHours(23, 59, 59)
+      const { total } = getFacturacion(d, f)
+      dias.push({ dia: d.toLocaleDateString('es-VE', { weekday: 'short' }), ventas: total })
     }
     return dias
   })()
 
+  const hayVentas = datosGrafico.some(d => d.ventas > 0)
+
+  /* fecha de bienvenida */
+  const fechaHoy = new Date().toLocaleDateString('es-VE', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  })
+
   return (
-    <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-bold text-xl text-marca-negro">Dashboard</h1>
-        <div className="flex gap-1 bg-marca-beige rounded-xl p-1">
+    <motion.div
+      className="space-y-5"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
+      {/* ── Bienvenida + filtros ── */}
+      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="font-bold text-xl text-marca-negro leading-tight">Bienvenida de nuevo</h1>
+          <p className="text-xs text-marca-texto-suave mt-0.5 capitalize">{fechaHoy}</p>
+        </div>
+        <div className="flex gap-1 bg-marca-beige rounded-xl p-1 self-start">
           {FILTROS.map(f => (
             <button
               key={f}
               onClick={() => setFiltro(f)}
-              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
-                filtro === f ? 'bg-white text-marca-negro shadow-sm' : 'text-marca-texto-suave'
-              }`}
+              className={`relative text-xs px-3 py-1.5 rounded-lg font-medium transition-colors duration-150
+                ${filtro === f ? 'text-marca-negro' : 'text-marca-texto-suave hover:text-marca-negro'}`}
             >
-              {f}
+              {filtro === f && (
+                <motion.span
+                  layoutId="filtroActivo"
+                  className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <span className="relative">{f}</span>
             </button>
           ))}
         </div>
+      </motion.div>
+
+      {/* ── Tarjetas financieras (héroe) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <TarjetaFinanciera
+          titulo="Facturación total"
+          valor={formatearPrecio(facturacion)}
+          icono={DollarSign}
+          nota="Ventas confirmadas"
+          acento
+        />
+        <TarjetaFinanciera
+          titulo="Ganancia neta"
+          valor={formatearPrecio(ganancia)}
+          icono={TrendingUp}
+          nota="Solo pedidos pagados"
+        />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <TarjetaMetrica titulo="Facturación" valor={formatearPrecio(facturacion)} icono={DollarSign} color="bg-emerald-500" />
-        <TarjetaMetrica titulo="Ganancia" valor={formatearPrecio(ganancia)} icono={TrendingUp} color="bg-marca-marron" />
-        <TarjetaMetrica titulo="Pedidos pendientes" valor={pendientes} icono={ShoppingCart} color="bg-amber-500" />
-        <TarjetaMetrica titulo="Pedidos pagados" valor={pagados} icono={ShoppingCart} color="bg-blue-500" />
+      {/* ── Tarjetas operacionales ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <TarjetaMini titulo="Pedidos pendientes"   valor={pendientes}               icono={Clock}         />
+        <TarjetaMini titulo="Pedidos pagados"      valor={pagados}                  icono={CheckCircle2}  />
+        <TarjetaMini titulo="No finalizados"       valor={noFinalizados}            icono={XCircle}       />
+        <TarjetaMini titulo="Ticket promedio"      valor={formatearPrecio(ticketPromedio)} icono={DollarSign} />
+        <TarjetaMini titulo="Clientes"             valor={clientes.length}          icono={Users}         />
+        <TarjetaMini titulo="Productos activos"    valor={productosActivos}         icono={Package}       />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <TarjetaMetrica titulo="Ticket promedio" valor={formatearPrecio(ticketPromedio)} icono={DollarSign} color="bg-violet-500" />
-        <TarjetaMetrica titulo="Total clientes" valor={clientes.length} icono={Users} color="bg-pink-500" />
-        <TarjetaMetrica titulo="Productos activos" valor={productosActivos} icono={Package} color="bg-teal-500" />
-        <TarjetaMetrica titulo="No finalizados" valor={noFinalizados} icono={ShoppingCart} color="bg-gray-400" />
-      </div>
-
-      {(agotados.length > 0 || bajoStock.length > 0) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle size={18} className="text-amber-600" />
-            <h2 className="font-semibold text-amber-800 text-sm">Alertas de inventario</h2>
-          </div>
-          <div className="space-y-1">
-            {agotados.map(p => (
-              <div key={p.id} className="flex items-center justify-between text-xs">
-                <span className="text-amber-700">{p.nombre}</span>
-                <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Agotado</span>
+      {/* ── Alertas de inventario ── */}
+      <AnimatePresence>
+        {(agotados.length > 0 || bajoStock.length > 0) && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            exit={{ opacity: 0 }}
+            className="bg-white rounded-2xl shadow-tarjeta p-4 border border-amber-100"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center shrink-0">
+                  <AlertTriangle size={15} className="text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-marca-negro">Alertas de inventario</p>
+                  <p className="text-[11px] text-marca-texto-suave">
+                    {agotados.length + bajoStock.length} producto{agotados.length + bajoStock.length !== 1 ? 's' : ''} requiere{agotados.length + bajoStock.length === 1 ? '' : 'n'} atención
+                  </p>
+                </div>
               </div>
-            ))}
-            {bajoStock.map(p => (
-              <div key={p.id} className="flex items-center justify-between text-xs">
-                <span className="text-amber-700">{p.nombre}</span>
-                <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Stock: {p.stock}</span>
-              </div>
-            ))}
-          </div>
-          <Link to="/admin/inventario" className="text-xs text-marca-marron font-medium mt-2 block">Ver inventario →</Link>
-        </div>
-      )}
+              <Link
+                to="/admin/inventario"
+                className="text-xs text-marca-marron font-medium hover:text-marca-marron-oscuro transition-colors flex items-center gap-1"
+              >
+                Ver inventario <ArrowRight size={12} />
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {agotados.map(p => (
+                <div key={p.id} className="flex items-center justify-between p-2.5 bg-red-50/60 rounded-xl">
+                  <span className="text-sm text-marca-negro">{p.nombre}</span>
+                  <span className="text-[10px] font-semibold text-red-600 bg-red-100 px-2.5 py-1 rounded-full">Agotado</span>
+                </div>
+              ))}
+              {bajoStock.map(p => (
+                <div key={p.id} className="flex items-center justify-between p-2.5 bg-amber-50/60 rounded-xl">
+                  <div className="min-w-0">
+                    <p className="text-sm text-marca-negro">{p.nombre}</p>
+                    <p className="text-[11px] text-marca-texto-suave">Solo {p.stock} {p.stock === 1 ? 'unidad' : 'unidades'}</p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full ml-3 shrink-0">Bajo stock</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="bg-white rounded-2xl shadow-tarjeta p-4 mb-6">
-        <h2 className="font-semibold text-sm text-marca-negro mb-4">Ventas últimos 7 días</h2>
-        <ResponsiveContainer width="100%" height={180}>
-          <AreaChart data={datosGrafico}>
-            <defs>
-              <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#9B7B5B" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#9B7B5B" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={grafColor.grid} />
-            <XAxis dataKey="dia" tick={{ fontSize: 11, fill: grafColor.tick }} />
-            <YAxis tick={{ fontSize: 11, fill: grafColor.tick }} />
-            <Tooltip
-              formatter={(v) => [formatearPrecio(v), 'Ventas']}
-              contentStyle={{ borderRadius: 12, border: `1px solid ${grafColor.border}`, boxShadow: 'none', fontSize: 12, backgroundColor: modoOscuro ? '#1f2937' : '#fff', color: modoOscuro ? '#f9fafb' : '#1C1C1C' }}
-            />
-            <Area type="monotone" dataKey="ventas" stroke="#9B7B5B" strokeWidth={2} fill="url(#colorVentas)" />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+      {/* ── Gráfico + Más vendidos ── */}
+      <div className="grid lg:grid-cols-5 gap-4">
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <div className="bg-white rounded-2xl shadow-tarjeta p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm text-marca-negro flex items-center gap-2">
-              <Star size={16} className="text-marca-marron" />
-              Más vendidos
-            </h2>
-            <Link to="/admin/metricas" className="text-xs text-marca-marron">Ver todo</Link>
+        {/* Gráfico */}
+        <motion.div variants={fadeUp} className="lg:col-span-3 bg-white rounded-2xl shadow-tarjeta p-4">
+          <div className="flex items-center justify-between mb-1">
+            <div>
+              <h2 className="text-sm font-semibold text-marca-negro">Ventas — últimos 7 días</h2>
+              <p className="text-[11px] text-marca-texto-suave mt-0.5">Solo pedidos en estado Pago</p>
+            </div>
           </div>
-          <div className="space-y-3">
-            {masVendidos.map((p, i) => (
-              <div key={p.id} className="flex items-center gap-3">
-                <span className="w-5 h-5 bg-marca-beige rounded-full flex items-center justify-center text-xs font-bold text-marca-marron shrink-0">{i + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-marca-negro truncate">{p.nombre}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <div className="flex-1 h-1.5 bg-marca-beige rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-marca-marron rounded-full"
-                        style={{ width: `${masVendidos[0].vendidos ? ((p.vendidos || 0) / masVendidos[0].vendidos) * 100 : 0}%` }}
-                      />
+          {hayVentas ? (
+            <ResponsiveContainer width="100%" height={160}>
+              <AreaChart data={datosGrafico} margin={{ top: 10, right: 4, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="grdVentas" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#9B7B5B" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#9B7B5B" stopOpacity={0}    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="2 4" stroke={grafColor.grid} vertical={false} />
+                <XAxis
+                  dataKey="dia"
+                  tick={{ fontSize: 10, fill: grafColor.tick }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: grafColor.tick }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={v => v === 0 ? '' : `$${v}`}
+                />
+                <Tooltip content={<TooltipGrafico modoOscuro={modoOscuro} />} />
+                <Area
+                  type="monotone"
+                  dataKey="ventas"
+                  stroke="#9B7B5B"
+                  strokeWidth={2}
+                  fill="url(#grdVentas)"
+                  dot={false}
+                  activeDot={{ r: 4, fill: '#9B7B5B', stroke: 'white', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <EstadoVacio icono={BarChart3} texto="Aún no hay ventas confirmadas en este periodo" />
+          )}
+        </motion.div>
+
+        {/* Más vendidos */}
+        <motion.div variants={fadeUp} className="lg:col-span-2 bg-white rounded-2xl shadow-tarjeta p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Star size={14} className="text-marca-dorado" strokeWidth={2} />
+              <h2 className="text-sm font-semibold text-marca-negro">Más vendidos</h2>
+            </div>
+            <Link to="/admin/metricas" className="text-[11px] text-marca-marron font-medium hover:text-marca-marron-oscuro transition-colors flex items-center gap-0.5">
+              Ver todo <ArrowRight size={11} />
+            </Link>
+          </div>
+
+          {masVendidos.filter(p => (p.vendidos || 0) > 0).length > 0 ? (
+            <div className="space-y-3">
+              {masVendidos.map((p, i) => (
+                <div key={p.id} className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold
+                    ${i === 0 ? 'bg-marca-dorado/15 text-marca-dorado' :
+                      i === 1 ? 'bg-marca-beige text-marca-marron' :
+                                'bg-marca-beige/60 text-marca-texto-suave'}`}
+                  >
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-marca-negro truncate">{p.nombre}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-1 bg-marca-beige rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-marca-marron to-marca-dorado rounded-full"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${masVendidos[0].vendidos ? ((p.vendidos || 0) / masVendidos[0].vendidos) * 100 : 0}%` }}
+                          transition={{ duration: 0.6, delay: 0.1 * i, ease: 'easeOut' }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-marca-texto-suave shrink-0">{p.vendidos || 0}</span>
                     </div>
-                    <span className="text-xs text-marca-texto-suave shrink-0">{p.vendidos || 0}</span>
                   </div>
                 </div>
-              </div>
-            ))}
-            {!masVendidos.length && <p className="text-xs text-marca-texto-suave text-center py-4">Sin datos aún</p>}
+              ))}
+            </div>
+          ) : (
+            <EstadoVacio icono={ShoppingBag} texto="Aún no hay productos vendidos" />
+          )}
+        </motion.div>
+      </div>
+
+      {/* ── Pedidos recientes ── */}
+      <motion.div variants={fadeUp} className="bg-white rounded-2xl shadow-tarjeta p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <ShoppingBag size={14} className="text-marca-marron" strokeWidth={1.8} />
+            <h2 className="text-sm font-semibold text-marca-negro">Pedidos recientes</h2>
           </div>
+          <Link to="/admin/pedidos" className="text-[11px] text-marca-marron font-medium hover:text-marca-marron-oscuro transition-colors flex items-center gap-0.5">
+            Ver todos <ArrowRight size={11} />
+          </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-tarjeta p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm text-marca-negro flex items-center gap-2">
-              <ShoppingCart size={16} className="text-marca-marron" />
-              Pedidos recientes
-            </h2>
-            <Link to="/admin/pedidos" className="text-xs text-marca-marron">Ver todos</Link>
-          </div>
-          <div className="space-y-2">
+        {pedidosRecientes.length > 0 ? (
+          <div className="divide-y divide-marca-beige-borde/50">
             {pedidosRecientes.map(p => (
-              <Link key={p.id} to="/admin/pedidos" className="flex items-center gap-3 p-2 rounded-xl hover:bg-marca-beige transition-colors">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-marca-negro truncate">{p.clienteNombre}</p>
-                  <p className="text-xs text-marca-texto-suave">{formatearFechaHora(p.creadoEn)}</p>
+              <Link
+                key={p.id}
+                to="/admin/pedidos"
+                className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 hover:bg-marca-beige/30 -mx-2 px-2 rounded-xl transition-colors"
+              >
+                {/* Avatar */}
+                <div className="w-8 h-8 bg-marca-beige rounded-full flex items-center justify-center shrink-0">
+                  <span className="text-xs font-bold text-marca-marron">
+                    {(p.clienteNombre || '?').charAt(0).toUpperCase()}
+                  </span>
                 </div>
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-marca-negro truncate">{p.clienteNombre}</p>
+                  <p className="text-[11px] text-marca-texto-suave">{formatearFechaHora(p.creadoEn)}</p>
+                </div>
+                {/* Monto + estado */}
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                  <span className="text-xs font-bold text-marca-negro">{formatearPrecio(p.total)}</span>
-                  <span className={`badge-estado text-[10px] ${estadoColor(p.estado)}`}>{p.estado}</span>
+                  <span className="text-sm font-bold text-marca-negro">{formatearPrecio(p.total)}</span>
+                  <span className={`badge-estado text-[9px] ${estadoColor(p.estado)}`}>{p.estado}</span>
                 </div>
               </Link>
             ))}
-            {!pedidosRecientes.length && <p className="text-xs text-marca-texto-suave text-center py-4">Sin pedidos aún</p>}
           </div>
-        </div>
-      </div>
-    </div>
+        ) : (
+          <EstadoVacio icono={ShoppingBag} texto="Sin pedidos aún. Cuando lleguen aparecerán aquí." />
+        )}
+      </motion.div>
+
+    </motion.div>
   )
 }
