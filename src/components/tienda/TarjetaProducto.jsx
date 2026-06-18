@@ -1,4 +1,4 @@
-import { Heart, ShoppingBag, AlertTriangle } from 'lucide-react'
+import { Heart, ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCarrito } from '../../store/useCarrito'
 import { useFavoritos } from '../../store/useFavoritos'
@@ -28,8 +28,9 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
 
   return (
     <Link to={`/producto/${producto.id}`} className="block group">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-tarjeta hover:shadow-tarjeta-hover transition-all duration-300">
-        <div className="relative aspect-square overflow-hidden bg-marca-beige">
+      <div className="bg-[#F8F6F2] rounded-[20px] overflow-hidden transition-all duration-300 active:scale-[0.97]">
+        {/* Imagen */}
+        <div className="relative aspect-square overflow-hidden">
           {producto.fotos?.[0] ? (
             <img
               src={producto.fotos[0]}
@@ -43,23 +44,27 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
             </div>
           )}
 
+          {/* Botón favorito */}
           <button
             onClick={manejarFavorito}
-            className="absolute top-2.5 right-2.5 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform"
+            className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-all duration-200
+              ${esFav ? 'bg-marca-negro' : 'bg-white/90 backdrop-blur-sm'}`}
           >
             <Heart
               size={14}
-              className={esFav ? 'text-red-500 fill-red-500' : 'text-marca-texto-suave'}
+              className={esFav ? 'text-white fill-white' : 'text-marca-texto-suave'}
               strokeWidth={esFav ? 0 : 2}
             />
           </button>
 
+          {/* Badge agotado */}
           {sinStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-              <span className="bg-white text-marca-texto text-xs font-semibold px-3 py-1 rounded-full shadow">Agotado</span>
+              <span className="bg-white text-marca-texto text-xs font-semibold px-3 py-1 rounded-full shadow-sm">Agotado</span>
             </div>
           )}
 
+          {/* Badge bajo stock */}
           {bajoStock && !sinStock && (
             <div className="absolute bottom-2 left-2">
               <span className="bg-amber-50 text-amber-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200">
@@ -69,15 +74,15 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
           )}
         </div>
 
+        {/* Info */}
         <div className="p-3">
-          <p className="text-xs text-marca-texto-suave mb-0.5 truncate">Yeral fancy</p>
           <h3 className="text-sm font-semibold text-marca-negro leading-tight line-clamp-2 mb-2">{producto.nombre}</h3>
           <div className="flex items-center justify-between">
-            <span className="text-base font-bold text-marca-marron-oscuro">{formatearPrecio(producto.precioVenta)}</span>
+            <span className="text-sm font-bold text-marca-marron-oscuro">{formatearPrecio(producto.precioVenta)}</span>
             <button
               onClick={manejarAgregar}
               disabled={sinStock}
-              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all active:scale-90 ${
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all active:scale-90 duration-150 ${
                 sinStock
                   ? 'bg-marca-beige text-marca-texto-suave cursor-not-allowed'
                   : 'bg-marca-negro text-white hover:bg-marca-marron-oscuro'

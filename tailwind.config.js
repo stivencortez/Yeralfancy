@@ -26,14 +26,17 @@ export default {
       },
       boxShadow: {
         'tarjeta': '0 2px 12px rgba(155, 123, 91, 0.10)',
-        'tarjeta-hover': '0 8px 24px rgba(155, 123, 91, 0.18)',
+        'tarjeta-hover': '0 8px 28px rgba(155, 123, 91, 0.20)',
         'barra': '0 -2px 20px rgba(28, 28, 28, 0.08)',
         'modal': '0 20px 60px rgba(28, 28, 28, 0.20)',
+        'flotante': '0 8px 32px rgba(28, 28, 28, 0.13), 0 2px 8px rgba(28, 28, 28, 0.06)',
+        'banner': '0 4px 24px rgba(28, 28, 28, 0.12)',
       },
       borderRadius: {
         'xl': '1rem',
         '2xl': '1.25rem',
         '3xl': '1.5rem',
+        '4xl': '2rem',
       },
       animation: {
         'slide-up': 'slideUp 0.3s ease-out',
