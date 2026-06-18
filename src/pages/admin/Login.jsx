@@ -21,7 +21,7 @@ export default function Login() {
     setCargando(true)
     setError('')
     await new Promise(r => setTimeout(r, 500))
-    const ok = iniciarSesion(usuario, contrasena)
+    const ok = await iniciarSesion(usuario, contrasena)
     if (ok) {
       navigate('/admin')
     } else {

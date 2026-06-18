@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { LayoutTienda } from './layouts/LayoutTienda'
 import { LayoutAdmin } from './layouts/LayoutAdmin'
+import InicializadorSupabase from './components/ui/InicializadorSupabase'
 
 import Inicio from './pages/tienda/Inicio'
 import Categorias from './pages/tienda/Categorias'
@@ -26,32 +27,35 @@ import Configuracion from './pages/admin/Configuracion'
 
 export default function App() {
   return (
-    <Routes>
-      <Route element={<LayoutTienda />}>
-        <Route path="/" element={<Inicio />} />
-        <Route path="/categorias" element={<Categorias />} />
-        <Route path="/categorias/:id" element={<CategoriaDetalle />} />
-        <Route path="/producto/:id" element={<Producto />} />
-        <Route path="/carrito" element={<Carrito />} />
-        <Route path="/favoritos" element={<Favoritos />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/pedido-creado/:id" element={<PedidoCreado />} />
-        <Route path="/buscar" element={<Buscar />} />
-        <Route path="/sobre" element={<Sobre />} />
-      </Route>
+    <>
+      <InicializadorSupabase />
+      <Routes>
+        <Route element={<LayoutTienda />}>
+          <Route path="/" element={<Inicio />} />
+          <Route path="/categorias" element={<Categorias />} />
+          <Route path="/categorias/:id" element={<CategoriaDetalle />} />
+          <Route path="/producto/:id" element={<Producto />} />
+          <Route path="/carrito" element={<Carrito />} />
+          <Route path="/favoritos" element={<Favoritos />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/pedido-creado/:id" element={<PedidoCreado />} />
+          <Route path="/buscar" element={<Buscar />} />
+          <Route path="/sobre" element={<Sobre />} />
+        </Route>
 
-      <Route path="/admin/login" element={<Login />} />
-      <Route path="/admin" element={<LayoutAdmin />}>
-        <Route index element={<Dashboard />} />
-        <Route path="productos" element={<Productos />} />
-        <Route path="categorias" element={<CategoriasAdmin />} />
-        <Route path="inventario" element={<Inventario />} />
-        <Route path="pedidos" element={<Pedidos />} />
-        <Route path="banners" element={<Banners />} />
-        <Route path="clientes" element={<Clientes />} />
-        <Route path="metricas" element={<Metricas />} />
-        <Route path="configuracion" element={<Configuracion />} />
-      </Route>
-    </Routes>
+        <Route path="/admin/login" element={<Login />} />
+        <Route path="/admin" element={<LayoutAdmin />}>
+          <Route index element={<Dashboard />} />
+          <Route path="productos" element={<Productos />} />
+          <Route path="categorias" element={<CategoriasAdmin />} />
+          <Route path="inventario" element={<Inventario />} />
+          <Route path="pedidos" element={<Pedidos />} />
+          <Route path="banners" element={<Banners />} />
+          <Route path="clientes" element={<Clientes />} />
+          <Route path="metricas" element={<Metricas />} />
+          <Route path="configuracion" element={<Configuracion />} />
+        </Route>
+      </Routes>
+    </>
   )
 }

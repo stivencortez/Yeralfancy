@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { supabase, pedidoDeDB, pedidoParaDB } from '../lib/supabase'
 import { generarId } from '../utils/formatear'
 
 export const usePedidos = create(
@@ -7,8 +8,21 @@ export const usePedidos = create(
     (set, get) => ({
       pedidos: [],
 
+      sincronizarDesdeSupabase: async () => {
+        try {
+          const { data, error } = await supabase
+            .from('pedidos')
+            .select('*')
+            .order('created_at', { ascending: false })
+          if (error) { console.warn('Supabase pedidos:', error.message); return }
+          set({ pedidos: data.map(pedidoDeDB) })
+        } catch (e) {
+          console.warn('Error sync pedidos:', e)
+        }
+      },
+
       crearPedido: (datos) => {
-        const costoTotal = datos.productos.reduce((acc, p) => acc + (p.precioCosto || 0) * p.cantidad, 0)
+        const costoTotal = (datos.productos || []).reduce((acc, p) => acc + (p.precioCosto || 0) * p.cantidad, 0)
         const gananciaTotal = datos.total - costoTotal
         const nuevo = {
           ...datos,
@@ -21,6 +35,8 @@ export const usePedidos = create(
           actualizadoEn: new Date().toISOString(),
         }
         set(s => ({ pedidos: [nuevo, ...s.pedidos] }))
+        supabase.from('pedidos').insert(pedidoParaDB(nuevo))
+          .then(({ error }) => { if (error) console.error('Error guardando pedido:', error) })
         return nuevo
       },
 
@@ -51,12 +67,20 @@ export const usePedidos = create(
             ),
           }
         })
+        const actualizado = get().pedidos.find(p => p.id === id)
+        if (actualizado) {
+          supabase.from('pedidos')
+            .update({
+              estado: actualizado.estado,
+              descontado_stock: actualizado.descontadoStock,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', id)
+        }
       },
 
       getPedido: (id) => get().pedidos.find(p => p.id === id),
-
       getPedidosPorEstado: (estado) => get().pedidos.filter(p => p.estado === estado),
-
       getFacturacionPeriodo: (inicio, fin) => {
         return get().pedidos
           .filter(p => p.estado === 'Pago' && new Date(p.creadoEn) >= inicio && new Date(p.creadoEn) <= fin)
