@@ -33,18 +33,11 @@ export function Header() {
       <div className="contenedor py-3 lg:hidden">
         <div className="flex items-center gap-3">
           <Link to="/" className="flex-1 flex items-center gap-2 min-w-0">
-            {config.logo ? (
-              <img src={config.logo} alt={config.nombre} className="h-9 w-auto object-contain" />
-            ) : (
-              <div className="flex items-center gap-1">
-                <div className="w-8 h-8 bg-marca-marron rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-sm font-display">YF</span>
-                </div>
-                <span className="font-display font-bold text-marca-negro text-xl tracking-tight">
-                  Yeral <span className="text-marca-marron">fancy</span>
-                </span>
-              </div>
-            )}
+            <img
+              src={config.logo || '/logos/IMG_5723.PNG'}
+              alt={config.nombre}
+              className="h-9 w-auto object-contain"
+            />
           </Link>
           <Link to="/carrito" className="relative p-2">
             <ShoppingBag size={22} className="text-marca-negro" strokeWidth={1.8} />
@@ -72,18 +65,11 @@ export function Header() {
       {/* Desktop layout */}
       <div className="contenedor hidden lg:flex items-center gap-6 py-3.5">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          {config.logo ? (
-            <img src={config.logo} alt={config.nombre} className="h-10 w-auto object-contain" />
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-marca-marron rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm font-display">YF</span>
-              </div>
-              <span className="font-display font-bold text-marca-negro text-2xl tracking-tight">
-                Yeral <span className="text-marca-marron">fancy</span>
-              </span>
-            </div>
-          )}
+          <img
+            src={config.logo || '/logos/IMG_5723.PNG'}
+            alt={config.nombre}
+            className="h-10 w-auto object-contain"
+          />
         </Link>
 
         <form onSubmit={manejarBusqueda} className="flex-1 max-w-xl">

@@ -165,7 +165,7 @@ export const BANNERS_INICIALES = [
 
 export const CONFIG_INICIAL = {
   nombre: 'Yeral fancy',
-  logo: null,
+  logo: '/logos/IMG_5723.PNG',
   email: 'Yeralfancy2023@gmail.com',
   whatsapp: '04243677705',
   instagram: 'https://www.instagram.com/yeral.fancy?igsh=MXVjYjNkeHJ4cXdhNg%3D%3D&utm_source=qr',
