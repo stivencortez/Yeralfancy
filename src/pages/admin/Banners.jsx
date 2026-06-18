@@ -1,24 +1,105 @@
-import { useState } from 'react'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Image } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, Image, Upload, X } from 'lucide-react'
 import { useBanners } from '../../store/useBanners'
+import { subirImagenBanner } from '../../lib/supabase'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { EstadoVacio } from '../../components/ui/Cargando'
 
+const LIMITE_MB = 10
+const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 const VACIO = { imagen: '', titulo: '', subtitulo: '', enlace: '', activo: true, orden: 1 }
+
+function SelectorImagen({ urlActual, onCambio }) {
+  const inputRef = useRef(null)
+  const [subiendo, setSubiendo] = useState(false)
+  const [error, setError] = useState('')
+
+  const manejarArchivo = async (archivo) => {
+    setError('')
+    if (!archivo) return
+    if (!archivo.type.startsWith('image/')) {
+      setError('El archivo debe ser una imagen.')
+      return
+    }
+    if (archivo.size > LIMITE_BYTES) {
+      setError(`El archivo supera el límite de ${LIMITE_MB} MB.`)
+      return
+    }
+    setSubiendo(true)
+    try {
+      const url = await subirImagenBanner(archivo)
+      onCambio(url)
+    } catch (e) {
+      setError('Error al subir la imagen: ' + e.message)
+    } finally {
+      setSubiendo(false)
+    }
+  }
+
+  const onDrop = (e) => {
+    e.preventDefault()
+    const archivo = e.dataTransfer.files[0]
+    if (archivo) manejarArchivo(archivo)
+  }
+
+  return (
+    <div>
+      <label className="etiqueta">Imagen * (formato 16:5, máx. {LIMITE_MB} MB)</label>
+
+      {urlActual ? (
+        <div className="relative rounded-xl overflow-hidden bg-marca-beige" style={{ aspectRatio: '16/5' }}>
+          <img src={urlActual} alt="" className="w-full h-full object-cover" />
+          <button
+            type="button"
+            onClick={() => { onCambio(''); inputRef.current.value = '' }}
+            className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80 transition-colors"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ) : (
+        <div
+          onDrop={onDrop}
+          onDragOver={e => e.preventDefault()}
+          onClick={() => inputRef.current.click()}
+          className="cursor-pointer border-2 border-dashed border-marca-beige-borde rounded-xl flex flex-col items-center justify-center gap-2 py-8 hover:border-marca-marron hover:bg-marca-beige/40 transition-colors"
+        >
+          {subiendo ? (
+            <div className="flex flex-col items-center gap-2 text-marca-texto-suave">
+              <div className="w-6 h-6 border-2 border-marca-marron border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm">Subiendo...</span>
+            </div>
+          ) : (
+            <>
+              <Upload size={24} className="text-marca-marron" />
+              <span className="text-sm font-medium text-marca-negro">Haz clic o arrastra la imagen aquí</span>
+              <span className="text-xs text-marca-texto-suave">JPG, PNG, WEBP · Máx. {LIMITE_MB} MB</span>
+            </>
+          )}
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => manejarArchivo(e.target.files[0])}
+      />
+
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  )
+}
 
 function FormBanner({ datos, setDatos, onGuardar, onCancelar }) {
   return (
     <div className="space-y-4">
-      <div>
-        <label className="etiqueta">URL de imagen * (formato 16:5)</label>
-        <input value={datos.imagen} onChange={e => setDatos(d => ({ ...d, imagen: e.target.value }))} className="input-campo" placeholder="https://..." />
-        {datos.imagen && (
-          <div className="mt-2 rounded-xl overflow-hidden bg-marca-beige" style={{ aspectRatio: '16/5' }}>
-            <img src={datos.imagen} alt="" className="w-full h-full object-cover" />
-          </div>
-        )}
-      </div>
+      <SelectorImagen
+        urlActual={datos.imagen}
+        onCambio={url => setDatos(d => ({ ...d, imagen: url }))}
+      />
       <div>
         <label className="etiqueta">Título</label>
         <input value={datos.titulo} onChange={e => setDatos(d => ({ ...d, titulo: e.target.value }))} className="input-campo" placeholder="Título del banner" />
@@ -59,7 +140,7 @@ export default function Banners() {
   const [nuevo, setNuevo] = useState({ ...VACIO })
 
   const manejarGuardarNuevo = () => {
-    if (!nuevo.imagen.trim()) { toast('La imagen es requerida', 'error'); return }
+    if (!nuevo.imagen) { toast('La imagen es requerida', 'error'); return }
     agregarBanner(nuevo)
     setModalNuevo(false)
     setNuevo({ ...VACIO })
@@ -67,7 +148,7 @@ export default function Banners() {
   }
 
   const manejarGuardarEditar = () => {
-    if (!modalEditar.imagen.trim()) { toast('La imagen es requerida', 'error'); return }
+    if (!modalEditar.imagen) { toast('La imagen es requerida', 'error'); return }
     editarBanner(modalEditar.id, modalEditar)
     setModalEditar(null)
     toast('Banner actualizado correctamente', 'exito')

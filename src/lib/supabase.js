@@ -111,6 +111,19 @@ export const clienteParaDB = (obj) => ({
   estado_ultimo_pedido: obj.estadoUltimoPedido || null,
 })
 
+// ─── Storage ──────────────────────────────────────────────────────────────────
+
+export const subirImagenBanner = async (archivo) => {
+  const ext = archivo.name.split('.').pop()
+  const nombre = `banner_${Date.now()}.${ext}`
+  const { data, error } = await supabase.storage
+    .from('banners')
+    .upload(nombre, archivo, { upsert: false, contentType: archivo.type })
+  if (error) throw new Error(error.message)
+  const { data: pub } = supabase.storage.from('banners').getPublicUrl(data.path)
+  return pub.publicUrl
+}
+
 // ─── Banners ──────────────────────────────────────────────────────────────────
 
 export const bannerDeDB = (row) => ({
