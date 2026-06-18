@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { usePWAIntro } from '../../store/usePWAIntro'
 import { useConfig } from '../../store/useConfig'
@@ -18,13 +18,25 @@ export default function PWAIntroScreen({ onEntrar }) {
 
   const banner = banners.length > 0 ? banners[indice] : BANNER_FALLBACK
   const hayBanners = banners.length > 0
+  const touchStartX = useRef(null)
 
-  // Auto-rotate si hay más de un banner
+  const siguiente = useCallback(() => setIndice(i => (i + 1) % banners.length), [banners.length])
+  const anterior = useCallback(() => setIndice(i => (i - 1 + banners.length) % banners.length), [banners.length])
+
+  // Auto-rotate cada 3 segundos
   useEffect(() => {
     if (banners.length <= 1) return
-    const id = setInterval(() => setIndice(i => (i + 1) % banners.length), 5000)
+    const id = setInterval(siguiente, 3000)
     return () => clearInterval(id)
-  }, [banners.length])
+  }, [siguiente, banners.length])
+
+  const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX }
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null || banners.length <= 1) return
+    const diff = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) diff > 0 ? siguiente() : anterior()
+    touchStartX.current = null
+  }
 
   return (
     <motion.div
@@ -33,6 +45,8 @@ export default function PWAIntroScreen({ onEntrar }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.04 }}
       transition={{ duration: 0.45, ease: [0.43, 0.13, 0.23, 0.96] }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* ── Fondo ── */}
       {banner.imagen ? (
