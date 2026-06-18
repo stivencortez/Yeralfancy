@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { Header } from '../components/tienda/Header'
 import { BarraInferior } from '../components/tienda/BarraInferior'
-import { BotonWhatsApp } from '../components/tienda/BotonWhatsApp'
 import { ToastContenedor } from '../components/ui/Toast'
 import { useToast } from '../hooks/useToast'
 import { createContext, useContext } from 'react'
@@ -21,7 +20,6 @@ export function LayoutTienda() {
           <Outlet />
         </main>
         <BarraInferior />
-        <BotonWhatsApp />
         <ToastContenedor toasts={toasts} quitar={quitar} />
         <PWAIntroGate />
       </div>
