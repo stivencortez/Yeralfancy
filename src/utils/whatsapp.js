@@ -1,6 +1,6 @@
 import { formatearPrecio } from './formatear'
 
-export function construirMensajeWhatsApp({ clienteNombre, clienteTelefono, items, total }) {
+export function construirMensajeWhatsApp({ clienteNombre, clienteTelefono, clienteCiudad, items, total }) {
   const lineasProductos = items.map(item =>
     `• ${item.nombre} x${item.cantidad} — ${formatearPrecio(item.precioVenta * item.cantidad)}`
   ).join('\n')
@@ -12,7 +12,7 @@ ${lineasProductos}
 
 *Total: ${formatearPrecio(total)}*
 
-Mi número de contacto es: ${clienteTelefono}
+📍 Ciudad: *${clienteCiudad}*
 
 Quedo en espera de su confirmación. ¡Gracias!`
 

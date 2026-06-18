@@ -18,6 +18,7 @@ export default function Checkout() {
 
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
+  const [ciudad, setCiudad] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [errores, setErrores] = useState({})
 
@@ -39,6 +40,7 @@ export default function Checkout() {
     if (!nombre.trim()) e.nombre = 'Ingresa tu nombre'
     if (!telefono.trim()) e.telefono = 'Ingresa tu número'
     else if (telefono.replace(/\D/g, '').length < 7) e.telefono = 'Número inválido'
+    if (!ciudad.trim()) e.ciudad = 'Ingresa tu ciudad'
     setErrores(e)
     return Object.keys(e).length === 0
   }
@@ -69,6 +71,7 @@ export default function Checkout() {
     const mensaje = construirMensajeWhatsApp({
       clienteNombre: nombre.trim(),
       clienteTelefono: telefono.trim(),
+      clienteCiudad: ciudad.trim(),
       items,
       total,
     })
@@ -141,6 +144,17 @@ export default function Checkout() {
               className={`input-campo ${errores.telefono ? 'border-red-300 bg-red-50' : ''}`}
             />
             {errores.telefono && <p className="text-red-500 text-xs mt-1">{errores.telefono}</p>}
+          </div>
+          <div>
+            <label className="etiqueta">Ciudad *</label>
+            <input
+              type="text"
+              value={ciudad}
+              onChange={e => { setCiudad(e.target.value); setErrores(er => ({ ...er, ciudad: '' })) }}
+              placeholder="Ej: Caracas, Valencia, Maracaibo..."
+              className={`input-campo ${errores.ciudad ? 'border-red-300 bg-red-50' : ''}`}
+            />
+            {errores.ciudad && <p className="text-red-500 text-xs mt-1">{errores.ciudad}</p>}
           </div>
         </div>
       </div>
