@@ -16,7 +16,7 @@ export function LayoutTienda() {
     <ToastCtx.Provider value={agregar}>
       <div className="min-h-screen bg-marca-fondo flex flex-col">
         <Header />
-        <main className="flex-1 pb-20">
+        <main className="flex-1 pb-20 lg:pb-0">
           <Outlet />
         </main>
         <BarraInferior />

@@ -10,17 +10,17 @@ function SeccionProductos({ titulo, productos, enlace }) {
   const mostrarToast = useTiendaToast()
   if (!productos.length) return null
   return (
-    <section className="mb-6">
-      <div className="contenedor flex items-center justify-between mb-3">
-        <h2 className="font-bold text-marca-negro text-base">{titulo}</h2>
+    <section className="mb-8">
+      <div className="contenedor flex items-center justify-between mb-4">
+        <h2 className="font-bold text-marca-negro text-base lg:text-lg">{titulo}</h2>
         {enlace && (
-          <Link to={enlace} className="flex items-center gap-0.5 text-xs text-marca-marron font-medium">
+          <Link to={enlace} className="flex items-center gap-0.5 text-xs text-marca-marron font-medium hover:text-marca-marron-oscuro transition-colors">
             Ver todo <ChevronRight size={14} />
           </Link>
         )}
       </div>
-      <div className="contenedor grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {productos.slice(0, 4).map(p => (
+      <div className="contenedor grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-4">
+        {productos.slice(0, 5).map(p => (
           <TarjetaProducto
             key={p.id}
             producto={p}
@@ -38,11 +38,12 @@ function CategoriasDestacadas({ categorias }) {
     'bg-violet-50', 'bg-pink-50', 'bg-teal-50', 'bg-orange-50',
   ]
   return (
-    <section className="mb-6">
-      <div className="contenedor mb-3">
-        <h2 className="font-bold text-marca-negro text-base">Categorías</h2>
+    <section className="mb-8">
+      <div className="contenedor mb-3 lg:mb-4">
+        <h2 className="font-bold text-marca-negro text-base lg:text-lg">Categorías</h2>
       </div>
-      <div className="scroll-horizontal px-4">
+      {/* Mobile: scroll horizontal */}
+      <div className="scroll-horizontal px-4 lg:hidden">
         {categorias.map((cat, i) => (
           <Link
             key={cat.id}
@@ -57,6 +58,25 @@ function CategoriasDestacadas({ categorias }) {
               )}
             </div>
             <span className="text-xs text-marca-texto font-medium text-center w-16 truncate">{cat.nombre}</span>
+          </Link>
+        ))}
+      </div>
+      {/* Desktop: grid */}
+      <div className="contenedor hidden lg:grid grid-cols-4 xl:grid-cols-8 gap-3">
+        {categorias.map((cat, i) => (
+          <Link
+            key={cat.id}
+            to={`/categorias/${cat.id}`}
+            className="group flex flex-col items-center gap-2"
+          >
+            <div className={`w-full aspect-square rounded-2xl overflow-hidden ${coloresBg[i % coloresBg.length]} transition-transform duration-200 group-hover:scale-105`}>
+              {cat.imagen ? (
+                <img src={cat.imagen} alt={cat.nombre} className="w-full h-full object-cover" loading="lazy" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-3xl">💎</div>
+              )}
+            </div>
+            <span className="text-xs text-marca-texto font-medium text-center w-full truncate">{cat.nombre}</span>
           </Link>
         ))}
       </div>
@@ -78,7 +98,7 @@ export default function Inicio() {
 
   return (
     <div className="animate-fade-in">
-      <div className="contenedor pt-4 mb-4">
+      <div className="contenedor pt-4 mb-6 lg:pt-6 lg:mb-8">
         <CarruselBanners />
       </div>
 
