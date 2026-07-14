@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, MessageCircle, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, MessageCircle, Tag, X, CheckCircle2 } from 'lucide-react'
 import { useCarrito } from '../../store/useCarrito'
 import { usePedidos } from '../../store/usePedidos'
 import { useClientes } from '../../store/useClientes'
 import { useConfig } from '../../store/useConfig'
+import { useCupones, calcularDescuento } from '../../store/useCupones'
 import { formatearPrecio } from '../../utils/formatear'
 import { construirMensajeWhatsApp, abrirWhatsApp } from '../../utils/whatsapp'
 import { EstadoVacio } from '../../components/ui/Cargando'
@@ -15,6 +16,7 @@ export default function Checkout() {
   const crearPedido = usePedidos(s => s.crearPedido)
   const agregarCliente = useClientes(s => s.agregarOActualizarCliente)
   const whatsapp = useConfig(s => s.config.whatsapp)
+  const { validarCodigo, registrarUso } = useCupones()
 
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
@@ -22,7 +24,14 @@ export default function Checkout() {
   const [enviando, setEnviando] = useState(false)
   const [errores, setErrores] = useState({})
 
-  const total = getTotal()
+  const [codigoCupon, setCodigoCupon] = useState('')
+  const [cuponAplicado, setCuponAplicado] = useState(null)
+  const [errorCupon, setErrorCupon] = useState('')
+  const [verificandoCupon, setVerificandoCupon] = useState(false)
+
+  const subtotal = getTotal()
+  const descuento = calcularDescuento(cuponAplicado, items)
+  const total = Math.max(0, subtotal - descuento)
 
   if (!items.length) {
     return (
@@ -33,6 +42,32 @@ export default function Checkout() {
         accion={<Link to="/" className="btn-primario mt-4">Explorar tienda</Link>}
       />
     )
+  }
+
+  const aplicarCupon = () => {
+    if (!codigoCupon.trim()) return
+    setVerificandoCupon(true)
+    setErrorCupon('')
+    const cupon = validarCodigo(codigoCupon)
+    if (!cupon) {
+      setErrorCupon('Código inválido, vencido o sin usos disponibles')
+      setCuponAplicado(null)
+    } else {
+      const d = calcularDescuento(cupon, items)
+      if (d === 0) {
+        setErrorCupon('Este cupón no aplica a los productos en tu carrito')
+        setCuponAplicado(null)
+      } else {
+        setCuponAplicado(cupon)
+      }
+    }
+    setVerificandoCupon(false)
+  }
+
+  const quitarCupon = () => {
+    setCuponAplicado(null)
+    setCodigoCupon('')
+    setErrorCupon('')
   }
 
   const validar = () => {
@@ -64,13 +99,17 @@ export default function Checkout() {
         clienteNombre: nombre.trim(),
         clienteTelefono: telefono.trim(),
         productos,
-        subtotal: total,
+        subtotal,
         total,
       })
     } catch (err) {
-      setErrores(e => ({ ...e, _general: 'Error al crear el pedido. Por favor intenta de nuevo.' }))
+      setErrores(e => ({ ...e, _general: 'Error: ' + (err.message || err) }))
       setEnviando(false)
       return
+    }
+
+    if (cuponAplicado) {
+      registrarUso(cuponAplicado.id)
     }
 
     agregarCliente(nombre.trim(), telefono.trim(), total, 'Pendiente')
@@ -81,6 +120,8 @@ export default function Checkout() {
       clienteCiudad: ciudad.trim(),
       items,
       total,
+      descuento,
+      codigoCupon: cuponAplicado?.codigo || '',
     })
 
     vaciarCarrito()
@@ -118,11 +159,65 @@ export default function Checkout() {
               </span>
             </div>
           ))}
-          <div className="border-t border-marca-beige-borde pt-3 flex justify-between">
-            <span className="font-bold text-marca-negro">Total</span>
-            <span className="font-bold text-lg text-marca-marron-oscuro">{formatearPrecio(total)}</span>
+
+          <div className="border-t border-marca-beige-borde pt-3 space-y-1.5">
+            {descuento > 0 && (
+              <>
+                <div className="flex justify-between text-sm text-marca-texto-suave">
+                  <span>Subtotal</span>
+                  <span>{formatearPrecio(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-emerald-600 font-medium">
+                  <span className="flex items-center gap-1"><Tag size={13} /> Cupón {cuponAplicado.codigo}</span>
+                  <span>-{formatearPrecio(descuento)}</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between pt-1">
+              <span className="font-bold text-marca-negro">Total</span>
+              <span className="font-bold text-lg text-marca-marron-oscuro">{formatearPrecio(total)}</span>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Cupón */}
+      <div className="bg-white rounded-2xl shadow-tarjeta p-4 mb-4">
+        <h2 className="font-semibold text-sm text-marca-negro mb-3">Cupón de descuento</h2>
+        {cuponAplicado ? (
+          <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+              <span className="text-sm font-mono font-bold text-emerald-700">{cuponAplicado.codigo}</span>
+              <span className="text-xs text-emerald-600">
+                {cuponAplicado.tipo === 'porcentaje' ? `${cuponAplicado.valor}% de descuento` : `${formatearPrecio(cuponAplicado.valor)} de descuento`}
+              </span>
+            </div>
+            <button onClick={quitarCupon} className="p-1 rounded-lg hover:bg-emerald-100 text-emerald-600 transition-colors">
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div className="flex gap-2">
+              <input
+                value={codigoCupon}
+                onChange={e => { setCodigoCupon(e.target.value.toUpperCase()); setErrorCupon('') }}
+                onKeyDown={e => e.key === 'Enter' && aplicarCupon()}
+                placeholder="CÓDIGO"
+                className={`input-campo font-mono flex-1 ${errorCupon ? 'border-red-300 bg-red-50' : ''}`}
+              />
+              <button
+                onClick={aplicarCupon}
+                disabled={!codigoCupon.trim() || verificandoCupon}
+                className="px-4 py-2.5 rounded-xl bg-marca-negro text-white text-sm font-semibold disabled:opacity-40 transition-opacity active:scale-95"
+              >
+                Aplicar
+              </button>
+            </div>
+            {errorCupon && <p className="text-red-500 text-xs mt-1.5">{errorCupon}</p>}
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-tarjeta p-4 mb-5">

@@ -38,6 +38,7 @@ export const productoDeDB = (row) => ({
   stock: row.stock || 0,
   stockMinimo: row.stock_minimo || 5,
   fotos: row.fotos || [],
+  capa: row.capa || null,
   destacado: row.destacado || false,
   activo: row.activo !== false,
   vendidos: row.vendidos || 0,
@@ -55,6 +56,7 @@ export const productoParaDB = (obj) => ({
   stock: obj.stock || 0,
   stock_minimo: obj.stockMinimo || 5,
   fotos: obj.fotos || [],
+  capa: obj.capa || null,
   destacado: obj.destacado || false,
   activo: obj.activo !== false,
   vendidos: obj.vendidos || 0,
@@ -113,7 +115,9 @@ export const clienteParaDB = (obj) => ({
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
 
-const imagenADataUrlComprimida = (archivo, maxLado = 1200, calidad = 0.82) => new Promise((resolve, reject) => {
+const MAX_BYTES = 3 * 1024 * 1024 // 3 MB
+
+const procesarImagenEnCanvas = (archivo, maxLado, calidad, modo, maxBytes) => new Promise((resolve, reject) => {
   const reader = new FileReader()
   reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
   reader.onload = () => {
@@ -124,9 +128,20 @@ const imagenADataUrlComprimida = (archivo, maxLado = 1200, calidad = 0.82) => ne
       const canvas = document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(img.width * escala))
       canvas.height = Math.max(1, Math.round(img.height * escala))
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      resolve(canvas.toDataURL('image/jpeg', calidad))
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      if (modo === 'blob') {
+        const comprimir = (q) => {
+          canvas.toBlob((blob) => {
+            if (!blob) { reject(new Error('Falló la compresión')); return }
+            if (!maxBytes || blob.size <= maxBytes || q <= 0.38) resolve(blob)
+            else comprimir(Math.max(0.38, +(q - 0.06).toFixed(2)))
+          }, 'image/jpeg', q)
+        }
+        comprimir(calidad)
+      } else {
+        resolve(canvas.toDataURL('image/jpeg', calidad))
+      }
     }
     img.src = reader.result
   }
@@ -134,35 +149,76 @@ const imagenADataUrlComprimida = (archivo, maxLado = 1200, calidad = 0.82) => ne
 })
 
 const subirImagenConFallback = async (archivo, bucket, prefijo, opciones = {}) => {
-  const ext = archivo.name.split('.').pop()
-  const nombre = `${prefijo}_${Date.now()}.${ext}`
+  const { maxLado = 1200, calidad = 0.82, maxBytes = MAX_BYTES } = opciones
+
+  let blob
+  try {
+    blob = await procesarImagenEnCanvas(archivo, maxLado, calidad, 'blob', maxBytes)
+  } catch {
+    blob = archivo
+  }
+
+  const nombre = `${prefijo}_${Date.now()}.jpg`
   const { data, error } = await supabase.storage
     .from(bucket)
-    .upload(nombre, archivo, { upsert: false, contentType: archivo.type })
+    .upload(nombre, blob, { upsert: false, contentType: 'image/jpeg' })
 
   if (!error) {
     const { data: pub } = supabase.storage.from(bucket).getPublicUrl(data.path)
     return pub.publicUrl
   }
 
-  return imagenADataUrlComprimida(archivo, opciones.maxLado, opciones.calidad)
+  return procesarImagenEnCanvas(archivo, maxLado, calidad, 'dataurl')
 }
 
 export const subirImagenLogo = async (archivo) => {
-  return subirImagenConFallback(archivo, 'logos', 'logo', { maxLado: 900, calidad: 0.86 })
+  return subirImagenConFallback(archivo, 'logos', 'logo', { maxLado: 900, calidad: 0.90, maxBytes: MAX_BYTES })
 }
 
 export const subirImagenBanner = async (archivo) => {
-  return subirImagenConFallback(archivo, 'banners', 'banner', { maxLado: 1400, calidad: 0.82 })
+  return subirImagenConFallback(archivo, 'banners', 'banner', { maxLado: 1600, calidad: 0.90, maxBytes: MAX_BYTES })
 }
 
 export const subirImagenCategoria = async (archivo) => {
-  return subirImagenConFallback(archivo, 'categorias', 'categoria', { maxLado: 1200, calidad: 0.82 })
+  return subirImagenConFallback(archivo, 'categorias', 'categoria', { maxLado: 1400, calidad: 0.90, maxBytes: MAX_BYTES })
 }
 
 export const subirImagenProducto = async (archivo) => {
-  return subirImagenConFallback(archivo, 'productos', 'producto', { maxLado: 1200, calidad: 0.82 })
+  return subirImagenConFallback(archivo, 'productos', 'produto', { maxLado: 1400, calidad: 0.90, maxBytes: MAX_BYTES })
 }
+
+// ─── Cupones ──────────────────────────────────────────────────────────────────
+
+export const cuponDeDB = (row) => ({
+  id: row.id,
+  codigo: row.codigo || '',
+  nombre: row.nombre || '',
+  tipo: row.tipo || 'porcentaje',
+  valor: Number(row.valor) || 0,
+  alcance: row.alcance || 'todo',
+  categoriaId: row.categoria_id || null,
+  productoId: row.producto_id || null,
+  fechaExpiracion: row.fecha_expiracion || null,
+  activo: row.activo !== false,
+  usosMaximos: row.usos_maximos ?? null,
+  usosActuales: row.usos_actuales || 0,
+  creadoEn: row.created_at,
+})
+
+export const cuponParaDB = (obj) => ({
+  id: obj.id,
+  codigo: (obj.codigo || '').toUpperCase().trim(),
+  nombre: obj.nombre || '',
+  tipo: obj.tipo || 'porcentaje',
+  valor: Number(obj.valor) || 0,
+  alcance: obj.alcance || 'todo',
+  categoria_id: obj.categoriaId || null,
+  producto_id: obj.productoId || null,
+  fecha_expiracion: obj.fechaExpiracion || null,
+  activo: obj.activo !== false,
+  usos_maximos: obj.usosMaximos ? Number(obj.usosMaximos) : null,
+  usos_actuales: obj.usosActuales || 0,
+})
 
 // ─── Banners ──────────────────────────────────────────────────────────────────
 

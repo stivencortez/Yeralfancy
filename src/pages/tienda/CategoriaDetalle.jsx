@@ -24,21 +24,13 @@ export default function CategoriaDetalle() {
 
   return (
     <div className="animate-fade-in">
-      <div className="relative">
-        {categoria.imagen && (
-          <div className="w-full h-32 overflow-hidden bg-marca-beige">
-            <img src={categoria.imagen} alt={categoria.nombre} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent" />
-          </div>
-        )}
-        <div className="contenedor py-4 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-marca-beige transition-colors">
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h1 className="font-bold text-xl text-marca-negro">{categoria.nombre}</h1>
-            <p className="text-xs text-marca-texto-suave">{productos.length} productos</p>
-          </div>
+      <div className="contenedor py-4 flex items-center gap-3">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-marca-beige transition-colors">
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <h1 className="font-bold text-xl text-marca-negro">{categoria.nombre}</h1>
+          <p className="text-xs text-marca-texto-suave">{productos.length} productos</p>
         </div>
       </div>
 

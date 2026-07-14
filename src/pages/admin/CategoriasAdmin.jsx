@@ -6,7 +6,7 @@ import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { EstadoVacio } from '../../components/ui/Cargando'
 
-const LIMITE_MB = 5
+const LIMITE_MB = 10
 const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 const VACIA = { nombre: '', descripcion: '', imagen: '', activa: true, orden: 1 }
 

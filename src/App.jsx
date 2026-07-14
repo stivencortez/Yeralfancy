@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import { LayoutTienda } from './layouts/LayoutTienda'
 import { LayoutAdmin } from './layouts/LayoutAdmin'
 import InicializadorSupabase from './components/ui/InicializadorSupabase'
+import ScrollToTop from './components/ui/ScrollToTop'
 
 import Inicio from './pages/tienda/Inicio'
 import Categorias from './pages/tienda/Categorias'
@@ -26,11 +27,13 @@ import Metricas from './pages/admin/Metricas'
 import Configuracion from './pages/admin/Configuracion'
 import PWAIntro from './pages/admin/PWAIntro'
 import ImportarExcel from './pages/admin/ImportarExcel'
+import Cupones from './pages/admin/Cupones'
 
 export default function App() {
   return (
     <>
       <InicializadorSupabase />
+      <ScrollToTop />
       <Routes>
         <Route element={<LayoutTienda />}>
           <Route path="/" element={<Inicio />} />
@@ -58,6 +61,7 @@ export default function App() {
           <Route path="metricas" element={<Metricas />} />
           <Route path="configuracion" element={<Configuracion />} />
           <Route path="importar-excel" element={<ImportarExcel />} />
+          <Route path="cupones" element={<Cupones />} />
         </Route>
       </Routes>
     </>

@@ -7,6 +7,7 @@ import { useBanners } from '../../store/useBanners'
 import { useConfig } from '../../store/useConfig'
 import { useAuth } from '../../store/useAuth'
 import { usePWAIntro } from '../../store/usePWAIntro'
+import { useCupones } from '../../store/useCupones'
 import { supabase } from '../../lib/supabase'
 
 const CLEANUP_KEY = 'yf-cleanup-ficticios-v1'
@@ -23,6 +24,7 @@ export default function InicializadorSupabase() {
   const sincConfig     = useConfig(s => s.sincronizarDesdeSupabase)
   const sincAuth       = useAuth(s => s.sincronizarDesdeSupabase)
   const sincPWAIntro   = usePWAIntro(s => s.sincronizarDesdeSupabase)
+  const sincCupones    = useCupones(s => s.sincronizarDesdeSupabase)
 
   useEffect(() => {
     const inicializar = async () => {
@@ -38,6 +40,7 @@ export default function InicializadorSupabase() {
         localStorage.removeItem('yf-banners')
         localStorage.setItem(CLEANUP_KEY, '1')
       }
+      localStorage.removeItem('yf-pedidos')
 
       // Sincronizar todos os stores com o Supabase
       await Promise.allSettled([
@@ -47,6 +50,7 @@ export default function InicializadorSupabase() {
         sincConfig(),
         sincAuth(),
         sincPWAIntro(),
+        sincCupones(),
       ])
       sincPedidos()
       sincClientes()

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { fotoCapa } from '../utils/imagen'
 
 export const useCarrito = create(
   persist(
@@ -24,8 +25,9 @@ export const useCarrito = create(
               nombre: producto.nombre,
               precioVenta: producto.precioVenta,
               precioCosto: producto.precioCosto,
+              categoriaId: producto.categoriaId || null,
               cantidad,
-              foto: producto.fotos?.[0] || null,
+              foto: fotoCapa(producto) || null,
               stock: producto.stock,
             }],
           }

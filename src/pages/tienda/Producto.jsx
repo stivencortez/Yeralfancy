@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, Heart, ShoppingBag, Zap, ChevronLeft, ChevronRight, Share2 } from 'lucide-react'
 import { TarjetaProducto } from '../../components/tienda/TarjetaProducto'
 import { useTiendaToast } from '../../layouts/LayoutTienda'
@@ -20,6 +20,11 @@ export default function Producto() {
   const { toggleFavorito, esFavorito } = useFavoritos()
   const [fotoActual, setFotoActual] = useState(0)
   const [cantidad, setCantidad] = useState(1)
+
+  useEffect(() => {
+    setFotoActual(0)
+    setCantidad(1)
+  }, [id])
 
   if (!producto) {
     return (
@@ -67,114 +72,104 @@ export default function Producto() {
     <div className="animate-fade-in">
 
       {/* ════════════════════════════════════════════════════
-          MOBILE — experiencia tipo app premium  (< 1024px)
+          MOBILE — full screen image style  (< 1024px)
       ════════════════════════════════════════════════════ */}
       <div className="lg:hidden">
 
-        {/* ── Zona imagen con thumbnails verticales a la derecha ── */}
-        <div className="relative bg-[#F5F3F0]">
+        {/* ── Imagen full screen ── */}
+        <div className="relative w-full h-[65vh] overflow-hidden bg-marca-beige">
 
-          {/* Botones superiores */}
-          <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
+          {/* Foto principal */}
+          {fotos.length ? (
+            <img
+              src={fotos[fotoActual]}
+              alt={producto.nombre}
+              className="w-full h-full object-cover transition-opacity duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <ShoppingBag size={48} className="text-marca-beige-borde" />
+            </div>
+          )}
+
+          {/* Degradê suave na base para transição com o card */}
+          <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-white via-white/40 to-transparent pointer-events-none" />
+
+          {/* Badge agotado */}
+          {sinStock && (
+            <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
+              <span className="bg-white text-marca-texto text-sm font-semibold px-4 py-1.5 rounded-full shadow">Agotado</span>
+            </div>
+          )}
+
+          {/* Botones nav — vidro fosco */}
+          <div className="absolute top-4 inset-x-4 z-20 flex items-center justify-between pointer-events-none">
             <button
               onClick={() => navigate(-1)}
-              className="w-10 h-10 bg-marca-negro text-white rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform pointer-events-auto"
+              className="w-10 h-10 bg-white/70 backdrop-blur-md rounded-full flex items-center justify-center shadow active:scale-90 transition-transform pointer-events-auto"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={18} className="text-marca-negro" />
             </button>
             <button
+              onClick={manejarCompartir}
+              className="w-10 h-10 bg-white/70 backdrop-blur-md rounded-full flex items-center justify-center shadow active:scale-90 transition-transform pointer-events-auto"
+            >
+              <Share2 size={17} className="text-marca-negro" />
+            </button>
+          </div>
+
+          {/* Thumbnails sobrepostos — blur fosco atrás */}
+          {fotos.length > 1 && (
+            <div className="absolute top-16 right-3 z-10 p-1.5 rounded-2xl bg-white/30 backdrop-blur-md flex flex-col gap-2">
+              {fotos.map((f, i) => (
+                <button
+                  key={i}
+                  onClick={() => setFotoActual(i)}
+                  className={`w-[50px] h-[50px] rounded-xl overflow-hidden border-2 transition-all duration-200 active:scale-95 flex-shrink-0 ${
+                    i === fotoActual
+                      ? 'border-white shadow-lg scale-105'
+                      : 'border-white/30 opacity-60'
+                  }`}
+                >
+                  <img src={f} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Card info — desliza sobre a imagem ── */}
+        <div className="-mt-6 relative z-10 bg-white rounded-t-[28px] px-5 pt-5 pb-32">
+
+          {/* Badges + favorito */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              {!sinStock && !bajoStock && (
+                <span className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full">Disponible</span>
+              )}
+              {bajoStock && (
+                <span className="bg-amber-50 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">Pocas unidades</span>
+              )}
+              {sinStock && (
+                <span className="bg-red-50 text-red-600 text-xs font-semibold px-3 py-1 rounded-full">Agotado</span>
+              )}
+              {categoria && (
+                <Link to={`/categorias/${categoria.id}`}
+                  className="text-xs text-marca-marron font-medium px-3 py-1 bg-marca-beige rounded-full">
+                  {categoria.nombre}
+                </Link>
+              )}
+            </div>
+            <button
               onClick={() => toggleFavorito(producto.id)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-all duration-200 pointer-events-auto
-                ${esFav ? 'bg-marca-negro' : 'bg-marca-negro'}`}
+              className="flex-shrink-0 ml-2 active:scale-90 transition-transform"
             >
               <Heart
-                size={17}
-                className={esFav ? 'text-white fill-white' : 'text-white'}
+                size={22}
+                className={esFav ? 'text-red-500 fill-red-500' : 'text-marca-texto-suave'}
                 strokeWidth={esFav ? 0 : 2}
               />
             </button>
-          </div>
-
-          {/* Contenedor imagen + thumbnails */}
-          <div className="flex gap-3 p-4 pt-16">
-
-            {/* Imagen principal */}
-            <div className="flex-1 relative aspect-square overflow-hidden rounded-[20px] bg-white">
-              {fotos.length ? (
-                <img
-                  src={fotos[fotoActual]}
-                  alt={producto.nombre}
-                  className="w-full h-full object-contain transition-opacity duration-300"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <ShoppingBag size={48} className="text-marca-beige-borde" />
-                </div>
-              )}
-
-              {/* Badge agotado */}
-              {sinStock && (
-                <div className="absolute inset-0 bg-white/60 flex items-center justify-center rounded-[20px]">
-                  <span className="bg-white text-marca-texto text-sm font-semibold px-4 py-1.5 rounded-full shadow">Agotado</span>
-                </div>
-              )}
-
-              {/* Flechas solo si no hay thumbnails */}
-              {fotos.length > 1 && fotos.length <= 2 && (
-                <>
-                  <button onClick={prevFoto}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform">
-                    <ChevronLeft size={15} className="text-marca-negro" />
-                  </button>
-                  <button onClick={nextFoto}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform">
-                    <ChevronRight size={15} className="text-marca-negro" />
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Thumbnails verticales lado derecho — igual que la referencia */}
-            {fotos.length > 1 && (
-              <div className="flex flex-col gap-2.5 w-[58px]">
-                {fotos.map((f, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setFotoActual(i)}
-                    className={`w-[58px] h-[58px] rounded-2xl overflow-hidden border-2 transition-all duration-200 active:scale-95 flex-shrink-0 ${
-                      i === fotoActual
-                        ? 'border-marca-negro shadow-md scale-105'
-                        : 'border-transparent opacity-55 hover:opacity-80'
-                    }`}
-                  >
-                    <img src={f} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Información del producto ── */}
-        <div className="px-4 pt-4 pb-4">
-
-          {/* Badges */}
-          <div className="flex items-center gap-2 mb-3">
-            {!sinStock && !bajoStock && (
-              <span className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full">Disponible</span>
-            )}
-            {bajoStock && (
-              <span className="bg-amber-50 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">Pocas unidades</span>
-            )}
-            {sinStock && (
-              <span className="bg-red-50 text-red-600 text-xs font-semibold px-3 py-1 rounded-full">Agotado</span>
-            )}
-            {categoria && (
-              <Link to={`/categorias/${categoria.id}`}
-                className="text-xs text-marca-marron font-medium px-3 py-1 bg-marca-beige rounded-full">
-                {categoria.nombre}
-              </Link>
-            )}
           </div>
 
           {/* Nombre */}
@@ -184,11 +179,12 @@ export default function Producto() {
           <p className="text-xl font-bold text-marca-marron-oscuro mb-4">{formatearPrecio(producto.precioVenta)}</p>
 
           {/* Descripción */}
-          {producto.descripcion && (
-            <div className="mb-5 pb-5 border-b border-marca-beige-borde">
-              <p className="text-sm text-marca-texto-suave leading-relaxed">{producto.descripcion}</p>
-            </div>
-          )}
+          <div className="mb-5 pb-5 border-b border-marca-beige-borde">
+            {producto.descripcion && (
+              <p className="text-sm text-marca-texto-suave leading-relaxed mb-2">{producto.descripcion}</p>
+            )}
+            <p className="text-[10px] text-marca-beige-borde font-mono select-all">#{producto.id}</p>
+          </div>
 
           {/* Cantidad */}
           {!sinStock && (
@@ -208,7 +204,7 @@ export default function Producto() {
             </div>
           )}
 
-          {/* Botones de compra — estilo referencia */}
+          {/* Botones compra */}
           {sinStock ? (
             <div className="bg-red-50 border border-red-100 rounded-[20px] p-4 text-center">
               <p className="text-red-600 font-medium text-sm">Producto agotado por el momento.</p>
@@ -216,7 +212,6 @@ export default function Producto() {
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
-              {/* CTA principal — botón negro grande tipo referencia */}
               <button
                 onClick={manejarComprarAhora}
                 className="w-full bg-marca-negro text-white font-bold py-4 rounded-full flex items-center justify-center gap-2.5 text-[15px] active:scale-[0.97] transition-transform duration-150"
@@ -224,13 +219,28 @@ export default function Producto() {
                 <ShoppingBag size={18} />
                 Comprar ahora
               </button>
-              {/* Secundario */}
               <button
                 onClick={manejarAgregar}
                 className="w-full bg-[#F0EAE0] text-marca-negro font-semibold py-3.5 rounded-full flex items-center justify-center gap-2 text-sm active:scale-[0.97] transition-transform duration-150"
               >
                 Agregar al carrito
               </button>
+            </div>
+          )}
+
+          {/* ── Recomendados mobile ── */}
+          {relacionados.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-marca-beige-borde">
+              <h2 className="font-bold text-base text-marca-negro mb-4">Productos similares</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {relacionados.map(p => (
+                  <TarjetaProducto
+                    key={p.id}
+                    producto={p}
+                    onAgregarAlCarrito={() => mostrarToast('Producto agregado al carrito', 'exito')}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -309,11 +319,12 @@ export default function Producto() {
                 <span className="text-[2rem] font-bold text-marca-marron-oscuro leading-none">{formatearPrecio(producto.precioVenta)}</span>
                 {badgeStock(true)}
               </div>
-              {producto.descripcion && (
-                <div className="pb-5 border-b border-marca-beige-borde">
-                  <p className="text-[0.9375rem] text-marca-texto-suave leading-relaxed">{producto.descripcion}</p>
-                </div>
-              )}
+              <div className="pb-5 border-b border-marca-beige-borde">
+                {producto.descripcion && (
+                  <p className="text-[0.9375rem] text-marca-texto-suave leading-relaxed mb-2">{producto.descripcion}</p>
+                )}
+                <p className="text-[10px] text-marca-beige-borde font-mono select-all">#{producto.id}</p>
+              </div>
               {!sinStock && (
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-marca-negro">Cantidad</span>
@@ -349,9 +360,9 @@ export default function Producto() {
         </div>
       </div>
 
-      {/* ── Productos relacionados ── */}
+      {/* ── Productos relacionados — solo desktop ── */}
       {relacionados.length > 0 && (
-        <div className="contenedor py-6 mt-2 border-t border-marca-beige-borde">
+        <div className="hidden lg:block contenedor py-6 mt-2 border-t border-marca-beige-borde">
           <h2 className="font-bold text-base text-marca-negro mb-4 lg:text-lg lg:mb-5">También te puede gustar</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {relacionados.map(p => (

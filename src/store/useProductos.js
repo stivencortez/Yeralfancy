@@ -24,7 +24,7 @@ export const useProductos = create(
       agregarProducto: async (datos) => {
         const nuevo = {
           ...datos,
-          id: generarId(),
+          id: datos.id?.trim() || generarId(),
           vendidos: 0,
           creadoEn: new Date().toISOString(),
           actualizadoEn: new Date().toISOString(),

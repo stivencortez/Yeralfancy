@@ -19,8 +19,9 @@ export default function Inventario() {
   const [nuevoStock, setNuevoStock] = useState('')
 
   const productosActivos = productos.filter(p => p.activo)
+  const terminoBusqueda = busqueda.replace(/^#/, '').toLowerCase()
   const filtrados = productosActivos.filter(p => {
-    const porNombre = p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    const porNombre = p.nombre.toLowerCase().includes(terminoBusqueda) || p.id.toLowerCase().includes(terminoBusqueda)
     const porCat = !filtroCategoria || p.categoriaId === filtroCategoria
     const porEstado = !filtroEstado ||
       (filtroEstado === 'agotado' && p.stock === 0) ||

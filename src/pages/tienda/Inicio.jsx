@@ -129,6 +129,12 @@ export default function Inicio() {
         <CarruselBanners />
       </div>
 
+      {/* ── CHIPS DE CATEGORÍAS debajo del banner (solo mobile) ── */}
+      {categorias.length > 0 && <CategoriasChips categorias={categorias} />}
+
+      {/* Grid de categorías — solo desktop */}
+      {categorias.length > 0 && <CategoriasGrid categorias={categorias} />}
+
       {/* Primera sección de productos */}
       {primeraSeccion.length > 0 && (
         <SeccionProductos
@@ -138,9 +144,6 @@ export default function Inicio() {
           limite={4}
         />
       )}
-
-      {/* ── CHIPS DE CATEGORÍAS entre secciones (solo mobile) ── */}
-      {categorias.length > 0 && <CategoriasChips categorias={categorias} />}
 
       {/* Segunda sección de productos */}
       {masVendidos.length > 0 && (
@@ -161,9 +164,6 @@ export default function Inicio() {
           limite={4}
         />
       )}
-
-      {/* Grid de categorías — solo desktop */}
-      {categorias.length > 0 && <CategoriasGrid categorias={categorias} />}
 
       {/* Estado vacío */}
       {!productos.length && (

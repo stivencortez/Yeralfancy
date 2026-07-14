@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCarrito } from '../../store/useCarrito'
 import { useFavoritos } from '../../store/useFavoritos'
 import { formatearPrecio } from '../../utils/formatear'
+import { imgSrc, fotoCapa, estiloCapa } from '../../utils/imagen'
 
 export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
   const agregarAlCarrito = useCarrito(s => s.agregarAlCarrito)
@@ -10,6 +12,9 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
   const esFav = esFavorito(producto.id)
   const sinStock = producto.stock === 0
   const bajoStock = !sinStock && producto.stock <= producto.stockMinimo
+  const [imgCargada, setImgCargada] = useState(false)
+  const fotoPortada = fotoCapa(producto)
+  const estiloPortada = estiloCapa(producto.capa)
 
   const manejarAgregar = (e) => {
     e.preventDefault()
@@ -30,13 +35,21 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
     <Link to={`/producto/${producto.id}`} className="block group">
       <div className="bg-[#F8F6F2] rounded-[20px] overflow-hidden transition-all duration-300 active:scale-[0.97]">
         {/* Imagen */}
-        <div className="relative aspect-square overflow-hidden">
-          {producto.fotos?.[0] ? (
+        <div className="relative aspect-square overflow-hidden bg-marca-beige">
+          {/* Skeleton */}
+          {!imgCargada && fotoPortada && (
+            <div className="absolute inset-0 bg-marca-beige animate-pulse" />
+          )}
+
+          {fotoPortada ? (
             <img
-              src={producto.fotos[0]}
+              src={imgSrc(fotoPortada, 400, 80)}
               alt={producto.nombre}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              style={estiloPortada}
+              className={`w-full h-full object-cover transition-all duration-500 ${estiloPortada ? '' : 'group-hover:scale-105'} ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
+              decoding="async"
+              onLoad={() => setImgCargada(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-marca-beige">
@@ -44,7 +57,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
             </div>
           )}
 
-          {/* Botón favorito — esquina superior izquierda */}
+          {/* Botón favorito */}
           <button
             onClick={manejarFavorito}
             className={`absolute top-2.5 left-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-all duration-200
@@ -57,14 +70,12 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
             />
           </button>
 
-          {/* Badge agotado */}
           {sinStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
               <span className="bg-white text-marca-texto text-xs font-semibold px-3 py-1 rounded-full shadow-sm">Agotado</span>
             </div>
           )}
 
-          {/* Badge bajo stock */}
           {bajoStock && !sinStock && (
             <div className="absolute bottom-2 left-2">
               <span className="bg-amber-50 text-amber-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-200">

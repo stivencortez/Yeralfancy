@@ -1,5 +1,6 @@
 import { Home, Search, ShoppingBag, Heart, User } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useCarrito } from '../../store/useCarrito'
 import { useFavoritos } from '../../store/useFavoritos'
 
@@ -21,8 +22,8 @@ export function BarraInferior() {
       style={{ bottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem))' }}
     >
       <div
-        className="bg-white/96 backdrop-blur-xl rounded-[26px] border border-marca-beige-borde/50"
-        style={{ boxShadow: '0 8px 32px rgba(28,28,28,0.13), 0 2px 8px rgba(28,28,28,0.06)' }}
+        className="bg-white rounded-[26px] border border-marca-beige-borde/50"
+        style={{ boxShadow: '0 8px 28px rgba(28,28,28,0.18), 0 4px 12px rgba(28,28,28,0.09)' }}
       >
         <div className="flex items-center justify-around px-1 py-2">
           {items.map(({ a, icono: Icono, etiqueta, badge, exacto }) => (
@@ -31,28 +32,36 @@ export function BarraInferior() {
               to={a}
               end={exacto}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl transition-all duration-200 min-w-[56px] relative select-none
+                `flex flex-col items-center gap-0.5 px-3 py-2 min-w-[56px] relative select-none
                  ${isActive ? 'text-marca-negro' : 'text-[#B0A090]'}`
               }
             >
               {({ isActive }) => (
                 <>
-                  <div className="relative">
+                  <div className="relative flex items-center justify-center w-10 h-9">
                     {isActive && (
-                      <span className="absolute -inset-x-2 -inset-y-1.5 bg-marca-beige rounded-xl transition-all duration-200" />
+                      <motion.div
+                        layoutId="barra-indicador"
+                        className="absolute inset-0 bg-marca-negro rounded-xl"
+                        transition={{
+                          type: 'tween',
+                          ease: [0.32, 0.0, 0.82, 1.0],
+                          duration: 0.28,
+                        }}
+                      />
                     )}
                     <Icono
-                      size={22}
+                      size={20}
                       strokeWidth={isActive ? 2.2 : 1.6}
-                      className="relative z-10 transition-all duration-200"
+                      className={`relative z-10 transition-colors duration-200 ${isActive ? 'text-white' : ''}`}
                     />
                     {badge > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-marca-negro text-white text-[9px] font-bold rounded-full flex items-center justify-center px-[3px] z-20 animate-bounce-in">
+                      <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-marca-marron text-white text-[9px] font-bold rounded-full flex items-center justify-center px-[3px] z-20 animate-bounce-in">
                         {badge > 9 ? '9+' : badge}
                       </span>
                     )}
                   </div>
-                  <span className={`text-[10px] relative z-10 transition-all duration-200 ${isActive ? 'font-semibold text-marca-negro' : 'font-medium'}`}>
+                  <span className={`text-[10px] transition-all duration-200 ${isActive ? 'font-semibold text-marca-negro' : 'font-medium'}`}>
                     {etiqueta}
                   </span>
                 </>

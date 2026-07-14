@@ -1,14 +1,18 @@
 import { formatearPrecio } from './formatear'
 
-export function construirMensajeWhatsApp({ clienteNombre, clienteTelefono, clienteCiudad, items, total }) {
+export function construirMensajeWhatsApp({ clienteNombre, clienteTelefono, clienteCiudad, items, total, descuento, codigoCupon }) {
   const lineasProductos = items.map(item =>
-    `• ${item.nombre} x${item.cantidad} — ${formatearPrecio(item.precioVenta * item.cantidad)}`
+    `• [#${item.productoId}] ${item.nombre} x${item.cantidad} — ${formatearPrecio(item.precioVenta * item.cantidad)}`
   ).join('\n')
+
+  const subtotal = items.reduce((a, i) => a + i.precioVenta * i.cantidad, 0)
+  const lineaDescuento = descuento > 0 ? `\n🏷️ Cupón *${codigoCupon}*: -${formatearPrecio(descuento)}` : ''
 
   const mensaje = `Hola, soy *${clienteNombre}*. Quiero finalizar esta compra en *Yeral fancy* 🛍️
 
 *Productos:*
 ${lineasProductos}
+${descuento > 0 ? `\nSubtotal: ${formatearPrecio(subtotal)}` : ''}${lineaDescuento}
 
 *Total: ${formatearPrecio(total)}*
 

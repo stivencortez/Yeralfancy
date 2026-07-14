@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../store/useAuth'
+import { useConfig } from '../../store/useConfig'
 
 export default function Login() {
   const autenticado = useAuth(s => s.autenticado)
   const iniciarSesion = useAuth(s => s.iniciarSesion)
+  const logo = useConfig(s => s.config.logo)
   const navigate = useNavigate()
 
   const [usuario, setUsuario] = useState('')
@@ -34,9 +36,13 @@ export default function Login() {
     <div className="min-h-screen bg-marca-beige flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-marca-marron rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl font-display">YF</span>
-          </div>
+          {logo ? (
+            <img src={logo} alt="Logo" className="w-16 h-16 rounded-2xl object-contain mx-auto mb-4 bg-marca-marron p-1" />
+          ) : (
+            <div className="w-16 h-16 bg-marca-marron rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-white font-bold text-2xl font-display">YF</span>
+            </div>
+          )}
           <h1 className="font-display font-bold text-2xl text-marca-negro">Yeral fancy</h1>
           <p className="text-sm text-marca-texto-suave mt-1">Panel Administrativo</p>
         </div>
@@ -94,9 +100,6 @@ export default function Login() {
               ) : 'Entrar'}
             </button>
           </form>
-          <p className="text-center text-xs text-marca-texto-suave mt-4">
-            Usuario: <strong>admin</strong> · Contraseña: <strong>yeralfancy2024</strong>
-          </p>
         </div>
       </div>
     </div>

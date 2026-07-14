@@ -1,23 +1,99 @@
 import { useRef, useState } from 'react'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Search, Package, Upload, X } from 'lucide-react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Search, Package, Upload, X, ZoomIn, RotateCcw } from 'lucide-react'
 import { useProductos } from '../../store/useProductos'
 import { useCategorias } from '../../store/useCategorias'
 import { subirImagenProducto } from '../../lib/supabase'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { formatearPrecio, calcularGanancia, calcularMargen, generarId } from '../../utils/formatear'
+import { imgSrc, estiloCapa, fotoCapa } from '../../utils/imagen'
 import { EstadoVacio } from '../../components/ui/Cargando'
 
-const PRODUCTO_VACIO = { nombre: '', descripcion: '', categoriaId: '', precioCosto: '', precioVenta: '', stock: '', stockMinimo: '5', fotos: [], destacado: false, activo: true }
+const PRODUCTO_VACIO = { id: '', nombre: '', descripcion: '', categoriaId: '', precioCosto: '', precioVenta: '', stock: '', stockMinimo: '5', fotos: [], capa: null, destacado: false, activo: true }
+const CAPA_DEFAULT = { indice: 0, zoom: 1, x: 50, y: 50 }
 const MAX_FOTOS = 5
-const LIMITE_MB = 5
+const LIMITE_MB = 12
 const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 
-function SelectorFotosProducto({ fotos, onCambio }) {
+function EditorCapa({ foto, capa, onCambio }) {
+  const contRef = useRef(null)
+  const dragRef = useRef(null)
+  const zoom = capa.zoom ?? 1
+
+  const alPresionar = (e) => {
+    e.preventDefault()
+    dragRef.current = { px: e.clientX, py: e.clientY, x: capa.x ?? 50, y: capa.y ?? 50 }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const alMover = (e) => {
+    if (!dragRef.current || !contRef.current) return
+    const rect = contRef.current.getBoundingClientRect()
+    const dx = ((e.clientX - dragRef.current.px) / rect.width) * 100
+    const dy = ((e.clientY - dragRef.current.py) / rect.height) * 100
+    onCambio({
+      ...capa,
+      x: Math.min(100, Math.max(0, dragRef.current.x - dx / zoom)),
+      y: Math.min(100, Math.max(0, dragRef.current.y - dy / zoom)),
+    })
+  }
+
+  const alSoltar = () => { dragRef.current = null }
+
+  return (
+    <div className="mt-3 p-3 bg-marca-beige/40 rounded-xl border border-marca-beige-borde">
+      <p className="text-xs font-medium text-marca-negro mb-2">Ajustar portada — arrastra para centrar, usa el zoom para acercar</p>
+      <div className="flex gap-3 items-start">
+        <div
+          ref={contRef}
+          onPointerDown={alPresionar}
+          onPointerMove={alMover}
+          onPointerUp={alSoltar}
+          onPointerCancel={alSoltar}
+          className="relative w-32 h-32 shrink-0 rounded-[16px] overflow-hidden bg-marca-beige cursor-move touch-none select-none"
+        >
+          <img
+            src={imgSrc(foto, 400)}
+            alt=""
+            draggable={false}
+            className="w-full h-full object-cover pointer-events-none"
+            style={estiloCapa(capa)}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] text-marca-texto-suave mb-1.5">Así se verá en el card de la tienda.</p>
+          <div className="flex items-center gap-2">
+            <ZoomIn size={14} className="text-marca-texto-suave shrink-0" />
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.05"
+              value={zoom}
+              onChange={e => onCambio({ ...capa, zoom: Number(e.target.value) })}
+              className="flex-1 accent-marca-marron"
+            />
+            <span className="text-[11px] text-marca-texto-suave w-8 text-right">{zoom.toFixed(1)}x</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => onCambio({ ...capa, zoom: 1, x: 50, y: 50 })}
+            className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-marca-texto-suave hover:text-marca-negro transition-colors"
+          >
+            <RotateCcw size={12} /> Restablecer
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SelectorFotosProducto({ fotos, onCambio, capa, onCambioCapa }) {
   const inputRef = useRef(null)
   const [subiendo, setSubiendo] = useState(false)
   const [error, setError] = useState('')
   const restantes = MAX_FOTOS - fotos.length
+  const indiceCapa = Number.isInteger(capa?.indice) && capa.indice < fotos.length ? capa.indice : 0
 
   const manejarArchivos = async (archivos) => {
     setError('')
@@ -45,7 +121,16 @@ function SelectorFotosProducto({ fotos, onCambio }) {
     }
   }
 
-  const quitarFoto = (i) => onCambio(fotos.filter((_, idx) => idx !== i))
+  const quitarFoto = (i) => {
+    onCambio(fotos.filter((_, idx) => idx !== i))
+    if (i === indiceCapa) onCambioCapa(null)
+    else if (i < indiceCapa) onCambioCapa({ ...capa, indice: indiceCapa - 1 })
+  }
+
+  const elegirCapa = (i) => {
+    if (i === indiceCapa) return
+    onCambioCapa({ ...CAPA_DEFAULT, indice: i })
+  }
 
   return (
     <div>
@@ -80,20 +165,36 @@ function SelectorFotosProducto({ fotos, onCambio }) {
       />
 
       {fotos.length > 0 && (
-        <div className="grid grid-cols-5 gap-2 mt-3">
-          {fotos.map((foto, i) => (
-            <div key={`${foto}-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-marca-beige">
-              <img src={foto} alt="" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                onClick={() => quitarFoto(i)}
-                className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+        <>
+          <p className="text-[11px] text-marca-texto-suave mt-3 mb-1.5">Toca una foto para usarla como portada del card.</p>
+          <div className="grid grid-cols-5 gap-2">
+            {fotos.map((foto, i) => (
+              <div
+                key={`${foto}-${i}`}
+                onClick={() => elegirCapa(i)}
+                className={`relative aspect-square rounded-xl overflow-hidden bg-marca-beige cursor-pointer transition-all ${i === indiceCapa ? 'ring-2 ring-marca-marron ring-offset-1' : 'hover:opacity-80'}`}
               >
-                <X size={12} />
-              </button>
-            </div>
-          ))}
-        </div>
+                <img src={foto} alt="" className="w-full h-full object-cover" />
+                {i === indiceCapa && (
+                  <span className="absolute bottom-0 inset-x-0 bg-marca-marron text-white text-[9px] font-semibold text-center py-0.5">Portada</span>
+                )}
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); quitarFoto(i) }}
+                  className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <EditorCapa
+            foto={fotos[indiceCapa]}
+            capa={{ ...CAPA_DEFAULT, ...(capa || {}), indice: indiceCapa }}
+            onCambio={onCambioCapa}
+          />
+        </>
       )}
 
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
@@ -101,13 +202,29 @@ function SelectorFotosProducto({ fotos, onCambio }) {
   )
 }
 
-function FormularioProducto({ datos, setDatos, categorias, onGuardar, onCancelar, titulo }) {
+function FormularioProducto({ datos, setDatos, categorias, onGuardar, onCancelar, esNuevo }) {
   const ganancia = datos.precioCosto && datos.precioVenta
     ? calcularGanancia(Number(datos.precioCosto), Number(datos.precioVenta))
     : null
 
   return (
     <div className="space-y-4">
+      <div>
+        <label className="etiqueta">
+          Código del producto
+          {esNuevo && <span className="text-[11px] font-normal text-marca-texto-suave ml-1">— vacío = autogenerar</span>}
+        </label>
+        {esNuevo ? (
+          <input
+            value={datos.id || ''}
+            onChange={e => setDatos(d => ({ ...d, id: e.target.value.replace(/[^a-zA-Z0-9\-_]/g, '').toUpperCase().slice(0, 30) }))}
+            className="input-campo font-mono"
+            placeholder="Ej: PUL-001"
+          />
+        ) : (
+          <div className="px-3 py-2.5 bg-marca-beige/60 rounded-xl text-marca-texto-suave font-mono text-sm select-all border border-marca-beige-borde">{datos.id}</div>
+        )}
+      </div>
       <div>
         <label className="etiqueta">Nombre *</label>
         <input value={datos.nombre} onChange={e => setDatos(d => ({ ...d, nombre: e.target.value }))} className="input-campo" placeholder="Nombre del producto" />
@@ -157,6 +274,8 @@ function FormularioProducto({ datos, setDatos, categorias, onGuardar, onCancelar
         <SelectorFotosProducto
           fotos={datos.fotos || []}
           onCambio={fotos => setDatos(d => ({ ...d, fotos }))}
+          capa={datos.capa || null}
+          onCambioCapa={capa => setDatos(d => ({ ...d, capa }))}
         />
       </div>
       <div className="flex gap-4">
@@ -188,12 +307,15 @@ export default function Productos() {
   const [modalEditar, setModalEditar] = useState(null)
   const [nuevo, setNuevo] = useState({ ...PRODUCTO_VACIO })
 
+  const terminoBusqueda = busqueda.replace(/^#/, '').toLowerCase()
   const filtrados = productos.filter(p =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    p.nombre.toLowerCase().includes(terminoBusqueda) ||
+    p.id.toLowerCase().includes(terminoBusqueda)
   )
 
   const manejarGuardarNuevo = async () => {
     if (!nuevo.nombre.trim() || !nuevo.precioVenta) { toast('Completa nombre y precio de venta', 'error'); return }
+    if (nuevo.id && productos.some(p => p.id === nuevo.id)) { toast('Ese código ya está en uso', 'error'); return }
     try {
       await agregarProducto({ ...nuevo, precioCosto: Number(nuevo.precioCosto) || 0, precioVenta: Number(nuevo.precioVenta), stock: Number(nuevo.stock) || 0, stockMinimo: Number(nuevo.stockMinimo) || 5 })
       setModalNuevo(false)
@@ -255,7 +377,7 @@ export default function Productos() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl overflow-hidden bg-marca-beige shrink-0">
-                            {p.fotos?.[0] ? <img src={p.fotos[0]} alt="" className="w-full h-full object-cover" /> : <Package size={16} className="text-marca-beige-borde m-auto mt-3" />}
+                            {fotoCapa(p) ? <img src={fotoCapa(p)} alt="" className="w-full h-full object-cover" style={estiloCapa(p.capa)} /> : <Package size={16} className="text-marca-beige-borde m-auto mt-3" />}
                           </div>
                           <div className="min-w-0">
                             <p className="font-medium text-marca-negro truncate max-w-[140px]">{p.nombre}</p>
@@ -302,7 +424,7 @@ export default function Productos() {
       </div>
 
       <Modal abierto={modalNuevo} onCerrar={() => setModalNuevo(false)} titulo="Nuevo producto" tamano="md">
-        <FormularioProducto datos={nuevo} setDatos={setNuevo} categorias={categorias} onGuardar={manejarGuardarNuevo} onCancelar={() => setModalNuevo(false)} />
+        <FormularioProducto datos={nuevo} setDatos={setNuevo} categorias={categorias} onGuardar={manejarGuardarNuevo} onCancelar={() => setModalNuevo(false)} esNuevo />
       </Modal>
 
       <Modal abierto={!!modalEditar} onCerrar={() => setModalEditar(null)} titulo="Editar producto" tamano="md">

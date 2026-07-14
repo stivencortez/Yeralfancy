@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useBanners } from '../../store/useBanners'
+import { imgSrc } from '../../utils/imagen'
 
 export function CarruselBanners() {
   const bannersActivos = useBanners(s => s.getActivos())
@@ -42,18 +43,24 @@ export function CarruselBanners() {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl shadow-banner cursor-pointer bg-marca-beige"
+      className="relative w-full overflow-hidden rounded-2xl shadow-banner cursor-pointer bg-marca-beige animate-pulse-once"
       style={{ aspectRatio: '21/9' }}
       onClick={() => banner.enlace && navigate(banner.enlace)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Preload siguiente banner */}
+      {bannersActivos.length > 1 && (
+        <link rel="preload" as="image" href={imgSrc(bannersActivos[(indice + 1) % bannersActivos.length].imagen, 1400, 82)} />
+      )}
       <img
         key={banner.imagen}
-        src={banner.imagen}
+        src={imgSrc(banner.imagen, 1400, 82)}
         alt={banner.titulo || 'Banner'}
         className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
         loading="eager"
+        decoding="async"
+        fetchPriority="high"
         draggable={false}
       />
 
