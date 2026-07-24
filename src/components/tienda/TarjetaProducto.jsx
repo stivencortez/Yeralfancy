@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useCarrito } from '../../store/useCarrito'
 import { useFavoritos } from '../../store/useFavoritos'
 import { formatearPrecio } from '../../utils/formatear'
-import { imgSrc, fotoCapa, estiloCapa } from '../../utils/imagen'
+import { imgSrc, fotoCapa } from '../../utils/imagen'
 
 export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
   const agregarAlCarrito = useCarrito(s => s.agregarAlCarrito)
@@ -14,7 +14,6 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
   const bajoStock = !sinStock && producto.stock <= producto.stockMinimo
   const [imgCargada, setImgCargada] = useState(false)
   const fotoPortada = fotoCapa(producto)
-  const estiloPortada = estiloCapa(producto.capa)
 
   const manejarAgregar = (e) => {
     e.preventDefault()
@@ -35,7 +34,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
     <Link to={`/producto/${producto.id}`} className="block group">
       <div className="bg-[#F8F6F2] rounded-[20px] overflow-hidden transition-all duration-300 active:scale-[0.97]">
         {/* Imagen */}
-        <div className="relative aspect-square overflow-hidden bg-marca-beige">
+        <div className="relative aspect-[4/5] overflow-hidden bg-marca-beige">
           {/* Skeleton */}
           {!imgCargada && fotoPortada && (
             <div className="absolute inset-0 bg-marca-beige animate-pulse" />
@@ -45,8 +44,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
             <img
               src={imgSrc(fotoPortada, 400, 80)}
               alt={producto.nombre}
-              style={estiloPortada}
-              className={`w-full h-full object-cover transition-all duration-500 ${estiloPortada ? '' : 'group-hover:scale-105'} ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
+              className={`w-full h-full object-contain transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
               onLoad={() => setImgCargada(true)}
