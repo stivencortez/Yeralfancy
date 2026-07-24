@@ -29,6 +29,9 @@ export function fotoCapa(producto) {
  */
 export function posicionCapa(capa) {
   if (!capa) return undefined
+  // Framings saved by the old editor (zoom > 1) point at the wrong region
+  // once the scale is dropped — ignore them and fall back to center.
+  if ((Number(capa.zoom) || 1) !== 1) return undefined
   const x = clampPct(capa.x)
   const y = clampPct(capa.y)
   if (x === 50 && y === 50) return undefined
