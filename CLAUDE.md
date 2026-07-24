@@ -24,4 +24,5 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 
 ## Convenções
 
-- Cards de produto usam imagem em **9:16 (`aspect-[9/16]`) com `object-contain`** (imagem inteira, sem zoom nem corte; 90% das fotos do dono são verticais alongadas).
+- Cards de produto usam imagem em **4:5 (`aspect-[4/5]`) com `object-contain`** (imagem inteira, sem zoom nem corte).
+- Quando a foto é mais estreita que o card, as sobras são preenchidas com uma **versão desfocada da própria foto** (em vez de faixas beges lisas).
