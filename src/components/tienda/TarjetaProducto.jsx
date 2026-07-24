@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useCarrito } from '../../store/useCarrito'
 import { useFavoritos } from '../../store/useFavoritos'
 import { formatearPrecio } from '../../utils/formatear'
-import { imgSrc, fotoCapa } from '../../utils/imagen'
+import { imgSrc, fotoCapa, posicionCapa } from '../../utils/imagen'
 
 export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
   const agregarAlCarrito = useCarrito(s => s.agregarAlCarrito)
@@ -14,6 +14,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
   const bajoStock = !sinStock && producto.stock <= producto.stockMinimo
   const [imgCargada, setImgCargada] = useState(false)
   const fotoPortada = fotoCapa(producto)
+  const posicionPortada = posicionCapa(producto.capa)
 
   const manejarAgregar = (e) => {
     e.preventDefault()
@@ -44,6 +45,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
             <img
               src={imgSrc(fotoPortada, 400, 80)}
               alt={producto.nombre}
+              style={posicionPortada ? { objectPosition: posicionPortada } : undefined}
               className={`w-full h-full object-cover transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"

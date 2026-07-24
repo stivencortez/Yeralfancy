@@ -40,6 +40,19 @@ export function estiloCapa(capa) {
   }
 }
 
+/**
+ * Object-position saved in producto.capa, for cards that use object-cover.
+ * Only the focal point is applied — the zoom/scale of estiloCapa is left out
+ * on purpose, since it made cover images look zoomed in.
+ */
+export function posicionCapa(capa) {
+  if (!capa) return undefined
+  const x = clampPct(capa.x)
+  const y = clampPct(capa.y)
+  if (x === 50 && y === 50) return undefined
+  return `${x}% ${y}%`
+}
+
 function clampPct(v) {
   const n = Number(v)
   if (!Number.isFinite(n)) return 50
