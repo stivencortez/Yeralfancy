@@ -7,7 +7,7 @@ Loja online (PWA, mobile-first, React + Vite + Tailwind + Supabase). App em espa
 Preferência do dono: **toda nova implementação deve ser versionada e publicada automaticamente**.
 
 - Após concluir qualquer alteração: rodar o build para validar, commitar com mensagem clara e **fazer push para `main`**.
-- O repositório está conectado ao **Vercel**, que faz o **deploy automático** a cada push no `main`.
+- O **Vercel está conectado ao fork `stivencortez/Yeralfancy`** (não ao repo principal). Depois que a mudança entra no `main` do repo principal, o dono clica em **"Sync fork"** no fork para disparar o deploy.
 - Variáveis de ambiente do Supabase (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) ficam configuradas no painel do Vercel (não estão no repo — `.env` é ignorado pelo git).
 
 > Requisito para que o push automático funcione: o GitHub App do Claude Code precisa ter
