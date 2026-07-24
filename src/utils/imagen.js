@@ -23,27 +23,9 @@ export function fotoCapa(producto) {
 }
 
 /**
- * Inline style that applies the cover framing (focal point + zoom) saved in
- * producto.capa to an <img> with object-cover. Returns undefined when the
- * framing is the default so hover/transition classes keep working.
- */
-export function estiloCapa(capa) {
-  if (!capa) return undefined
-  const x = clampPct(capa.x)
-  const y = clampPct(capa.y)
-  const zoom = Math.min(3, Math.max(1, Number(capa.zoom) || 1))
-  if (zoom === 1 && x === 50 && y === 50) return undefined
-  return {
-    objectPosition: `${x}% ${y}%`,
-    transform: `scale(${zoom})`,
-    transformOrigin: `${x}% ${y}%`,
-  }
-}
-
-/**
  * Object-position saved in producto.capa, for cards that use object-cover.
- * Only the focal point is applied — the zoom/scale of estiloCapa is left out
- * on purpose, since it made cover images look zoomed in.
+ * Only the focal point is applied — zoom/scale is left out on purpose,
+ * since it made cover images look zoomed in.
  */
 export function posicionCapa(capa) {
   if (!capa) return undefined

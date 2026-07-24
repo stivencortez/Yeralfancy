@@ -26,4 +26,4 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 
 - Cards de produto usam imagem em **4:5 (`aspect-[4/5]`) com `object-cover`**: a foto preenche o card, sem faixas laterais.
 - O card respeita o **ponto central** salvo em `producto.capa` (via `posicionCapa`, só `objectPosition`) — o dono ajusta o enquadramento por produto no admin ("portada": arrastar para centrar).
-- **Não** aplicar `estiloCapa` (zoom/escala `transform`) nos cards — o zoom é o que deixava a imagem estourada.
+- O editor de portada do admin tem prévia em **4:5 sem zoom**, idêntica ao card da loja (`estiloCapa` foi removido; nunca reintroduzir zoom/escala em cards).
