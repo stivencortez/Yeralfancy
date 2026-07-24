@@ -24,5 +24,5 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 
 ## Convenções
 
-- Cards de produto usam imagem em **4:5 (`aspect-[4/5]`) com `object-contain`** (imagem inteira, sem zoom nem corte).
-- Quando a foto é mais estreita que o card, as sobras são preenchidas com uma **versão desfocada da própria foto** (em vez de faixas beges lisas).
+- Cards de produto usam imagem em **4:5 (`aspect-[4/5]`) com `object-cover`**, igual à página de detalhes: a foto preenche o card, sem faixas laterais.
+- **Não** aplicar o enquadramento `estiloCapa` (zoom/escala) nos cards — era ele que deixava a imagem com zoom errado; a página de detalhes também não usa.

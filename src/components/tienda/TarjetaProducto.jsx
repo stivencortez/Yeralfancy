@@ -41,23 +41,14 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
           )}
 
           {fotoPortada ? (
-            <>
-              {/* Relleno difuminado: cubre los lados cuando la foto es más
-                  estrecha que el card, sin recortar la foto real */}
-              <div
-                aria-hidden="true"
-                className={`absolute inset-0 bg-cover bg-center scale-110 blur-2xl transition-opacity duration-500 ${imgCargada ? 'opacity-70' : 'opacity-0'}`}
-                style={{ backgroundImage: `url(${imgSrc(fotoPortada, 48, 40)})` }}
-              />
-              <img
-                src={imgSrc(fotoPortada, 400, 80)}
-                alt={producto.nombre}
-                className={`relative w-full h-full object-contain transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
-                loading="lazy"
-                decoding="async"
-                onLoad={() => setImgCargada(true)}
-              />
-            </>
+            <img
+              src={imgSrc(fotoPortada, 400, 80)}
+              alt={producto.nombre}
+              className={`w-full h-full object-cover transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setImgCargada(true)}
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-marca-beige">
               <ShoppingBag size={32} className="text-marca-beige-borde" />
