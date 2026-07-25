@@ -196,86 +196,92 @@ function FormularioProducto({ datos, setDatos, categorias, onGuardar, onCancelar
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="etiqueta">
-          Código del producto
-          {esNuevo && <span className="text-[11px] font-normal text-marca-texto-suave ml-1">— vacío = autogenerar</span>}
-        </label>
-        {esNuevo ? (
-          <input
-            value={datos.id || ''}
-            onChange={e => setDatos(d => ({ ...d, id: e.target.value.replace(/[^a-zA-Z0-9\-_]/g, '').toUpperCase().slice(0, 30) }))}
-            className="input-campo font-mono"
-            placeholder="Ej: PUL-001"
+      {/* En desktop el formulario ocupa el ancho del modal en dos columnas:
+          datos a la izquierda, fotos y portada a la derecha */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+        <div className="space-y-4">
+          <div>
+            <label className="etiqueta">
+              Código del producto
+              {esNuevo && <span className="text-[11px] font-normal text-marca-texto-suave ml-1">— vacío = autogenerar</span>}
+            </label>
+            {esNuevo ? (
+              <input
+                value={datos.id || ''}
+                onChange={e => setDatos(d => ({ ...d, id: e.target.value.replace(/[^a-zA-Z0-9\-_]/g, '').toUpperCase().slice(0, 30) }))}
+                className="input-campo font-mono"
+                placeholder="Ej: PUL-001"
+              />
+            ) : (
+              <div className="px-3 py-2.5 bg-marca-beige/60 rounded-xl text-marca-texto-suave font-mono text-sm select-all border border-marca-beige-borde">{datos.id}</div>
+            )}
+          </div>
+          <div>
+            <label className="etiqueta">Nombre *</label>
+            <input value={datos.nombre} onChange={e => setDatos(d => ({ ...d, nombre: e.target.value }))} className="input-campo" placeholder="Nombre del producto" />
+          </div>
+          <div>
+            <label className="etiqueta">Descripción</label>
+            <textarea value={datos.descripcion} onChange={e => setDatos(d => ({ ...d, descripcion: e.target.value }))} className="input-campo resize-none" rows={3} placeholder="Descripción del producto..." />
+          </div>
+          <div>
+            <label className="etiqueta">Categoría</label>
+            <select value={datos.categoriaId} onChange={e => setDatos(d => ({ ...d, categoriaId: e.target.value }))} className="input-campo">
+              <option value="">Seleccionar categoría</option>
+              {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="etiqueta">Precio de costo (USD)</label>
+              <input type="number" min="0" step="0.01" value={datos.precioCosto} onChange={e => setDatos(d => ({ ...d, precioCosto: e.target.value }))} className="input-campo" placeholder="0.00" />
+            </div>
+            <div>
+              <label className="etiqueta">Precio de venta (USD)</label>
+              <input type="number" min="0" step="0.01" value={datos.precioVenta} onChange={e => setDatos(d => ({ ...d, precioVenta: e.target.value }))} className="input-campo" placeholder="0.00" />
+            </div>
+          </div>
+          {ganancia !== null && (
+            <div className="flex gap-2 text-xs">
+              <span className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-medium">
+                Ganancia: {formatearPrecio(ganancia)}
+              </span>
+              <span className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-medium">
+                Margen: {calcularMargen(Number(datos.precioCosto), Number(datos.precioVenta)).toFixed(1)}%
+              </span>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="etiqueta">Stock actual</label>
+              <input type="number" min="0" value={datos.stock} onChange={e => setDatos(d => ({ ...d, stock: e.target.value }))} className="input-campo" placeholder="0" />
+            </div>
+            <div>
+              <label className="etiqueta">Stock mínimo</label>
+              <input type="number" min="0" value={datos.stockMinimo} onChange={e => setDatos(d => ({ ...d, stockMinimo: e.target.value }))} className="input-campo" placeholder="5" />
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={datos.activo} onChange={e => setDatos(d => ({ ...d, activo: e.target.checked }))} className="w-4 h-4 accent-marca-marron" />
+              <span className="text-sm font-medium text-marca-negro">Activo</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={datos.destacado} onChange={e => setDatos(d => ({ ...d, destacado: e.target.checked }))} className="w-4 h-4 accent-marca-marron" />
+              <span className="text-sm font-medium text-marca-negro">Destacado</span>
+            </label>
+          </div>
+        </div>
+        <div>
+          <SelectorFotosProducto
+            fotos={datos.fotos || []}
+            onCambio={fotos => setDatos(d => ({ ...d, fotos }))}
+            capa={datos.capa || null}
+            onCambioCapa={capa => setDatos(d => ({ ...d, capa }))}
           />
-        ) : (
-          <div className="px-3 py-2.5 bg-marca-beige/60 rounded-xl text-marca-texto-suave font-mono text-sm select-all border border-marca-beige-borde">{datos.id}</div>
-        )}
-      </div>
-      <div>
-        <label className="etiqueta">Nombre *</label>
-        <input value={datos.nombre} onChange={e => setDatos(d => ({ ...d, nombre: e.target.value }))} className="input-campo" placeholder="Nombre del producto" />
-      </div>
-      <div>
-        <label className="etiqueta">Descripción</label>
-        <textarea value={datos.descripcion} onChange={e => setDatos(d => ({ ...d, descripcion: e.target.value }))} className="input-campo resize-none" rows={3} placeholder="Descripción del producto..." />
-      </div>
-      <div>
-        <label className="etiqueta">Categoría</label>
-        <select value={datos.categoriaId} onChange={e => setDatos(d => ({ ...d, categoriaId: e.target.value }))} className="input-campo">
-          <option value="">Seleccionar categoría</option>
-          {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="etiqueta">Precio de costo (USD)</label>
-          <input type="number" min="0" step="0.01" value={datos.precioCosto} onChange={e => setDatos(d => ({ ...d, precioCosto: e.target.value }))} className="input-campo" placeholder="0.00" />
-        </div>
-        <div>
-          <label className="etiqueta">Precio de venta (USD)</label>
-          <input type="number" min="0" step="0.01" value={datos.precioVenta} onChange={e => setDatos(d => ({ ...d, precioVenta: e.target.value }))} className="input-campo" placeholder="0.00" />
         </div>
       </div>
-      {ganancia !== null && (
-        <div className="flex gap-2 text-xs">
-          <span className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg font-medium">
-            Ganancia: {formatearPrecio(ganancia)}
-          </span>
-          <span className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-medium">
-            Margen: {calcularMargen(Number(datos.precioCosto), Number(datos.precioVenta)).toFixed(1)}%
-          </span>
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="etiqueta">Stock actual</label>
-          <input type="number" min="0" value={datos.stock} onChange={e => setDatos(d => ({ ...d, stock: e.target.value }))} className="input-campo" placeholder="0" />
-        </div>
-        <div>
-          <label className="etiqueta">Stock mínimo</label>
-          <input type="number" min="0" value={datos.stockMinimo} onChange={e => setDatos(d => ({ ...d, stockMinimo: e.target.value }))} className="input-campo" placeholder="5" />
-        </div>
-      </div>
-      <div>
-        <SelectorFotosProducto
-          fotos={datos.fotos || []}
-          onCambio={fotos => setDatos(d => ({ ...d, fotos }))}
-          capa={datos.capa || null}
-          onCambioCapa={capa => setDatos(d => ({ ...d, capa }))}
-        />
-      </div>
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={datos.activo} onChange={e => setDatos(d => ({ ...d, activo: e.target.checked }))} className="w-4 h-4 accent-marca-marron" />
-          <span className="text-sm font-medium text-marca-negro">Activo</span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={datos.destacado} onChange={e => setDatos(d => ({ ...d, destacado: e.target.checked }))} className="w-4 h-4 accent-marca-marron" />
-          <span className="text-sm font-medium text-marca-negro">Destacado</span>
-        </label>
-      </div>
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-3 pt-2 lg:max-w-sm lg:ml-auto">
         <button onClick={onCancelar} className="flex-1 btn-outline py-3">Cancelar</button>
         <button onClick={onGuardar} className="flex-1 btn-primario py-3">Guardar</button>
       </div>
@@ -410,11 +416,11 @@ export default function Productos() {
         )}
       </div>
 
-      <Modal abierto={modalNuevo} onCerrar={() => setModalNuevo(false)} titulo="Nuevo producto" tamano="md">
+      <Modal abierto={modalNuevo} onCerrar={() => setModalNuevo(false)} titulo="Nuevo producto" tamano="xl">
         <FormularioProducto datos={nuevo} setDatos={setNuevo} categorias={categorias} onGuardar={manejarGuardarNuevo} onCancelar={() => setModalNuevo(false)} esNuevo />
       </Modal>
 
-      <Modal abierto={!!modalEditar} onCerrar={() => setModalEditar(null)} titulo="Editar producto" tamano="md">
+      <Modal abierto={!!modalEditar} onCerrar={() => setModalEditar(null)} titulo="Editar producto" tamano="xl">
         {modalEditar && <FormularioProducto datos={modalEditar} setDatos={setModalEditar} categorias={categorias} onGuardar={manejarGuardarEditar} onCancelar={() => setModalEditar(null)} />}
       </Modal>
     </div>
