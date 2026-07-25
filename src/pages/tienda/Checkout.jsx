@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, MessageCircle, Tag, X, CheckCircle2 } from 'lucide-react'
 import { useCarrito } from '../../store/useCarrito'
+import { useProductos } from '../../store/useProductos'
 import { usePedidos } from '../../store/usePedidos'
 import { useClientes } from '../../store/useClientes'
 import { useConfig } from '../../store/useConfig'
@@ -12,7 +13,8 @@ import { EstadoVacio } from '../../components/ui/Cargando'
 
 export default function Checkout() {
   const navigate = useNavigate()
-  const { items, getTotal, vaciarCarrito } = useCarrito()
+  const { items, getTotal, vaciarCarrito, sincronizarConCatalogo } = useCarrito()
+  const productos = useProductos(s => s.productos)
   const crearPedido = usePedidos(s => s.crearPedido)
   const agregarCliente = useClientes(s => s.agregarOActualizarCliente)
   const whatsapp = useConfig(s => s.config.whatsapp)
@@ -28,6 +30,8 @@ export default function Checkout() {
   const [cuponAplicado, setCuponAplicado] = useState(null)
   const [errorCupon, setErrorCupon] = useState('')
   const [verificandoCupon, setVerificandoCupon] = useState(false)
+
+  useEffect(() => { sincronizarConCatalogo(productos) }, [productos, sincronizarConCatalogo])
 
   const subtotal = getTotal()
   const descuento = calcularDescuento(cuponAplicado, items)
@@ -84,6 +88,10 @@ export default function Checkout() {
     if (!validar() || enviando) return
     setEnviando(true)
 
+    // Ventana abierta de forma síncrona, dentro del gesto del usuario:
+    // abrirla después del await sería bloqueado en Safari/iOS
+    const ventanaWhatsApp = window.open('', '_blank')
+
     const productos = items.map(i => ({
       productoId: i.productoId,
       nombre: i.nombre,
@@ -103,6 +111,7 @@ export default function Checkout() {
         total,
       })
     } catch (err) {
+      ventanaWhatsApp?.close()
       setErrores(e => ({ ...e, _general: 'Error: ' + (err.message || err) }))
       setEnviando(false)
       return
@@ -127,7 +136,7 @@ export default function Checkout() {
     vaciarCarrito()
     setEnviando(false)
 
-    abrirWhatsApp(whatsapp, mensaje)
+    abrirWhatsApp(whatsapp, mensaje, ventanaWhatsApp)
     navigate(`/pedido-creado/${pedido.id}`)
   }
 

@@ -39,6 +39,35 @@ export const useCarrito = create(
         set(s => ({ items: s.items.filter(i => i.productoId !== productoId) }))
       },
 
+      /* Alinea los items persistidos con el catálogo actual: precio, stock,
+         categoría y portada pueden haber cambiado desde que se agregaron.
+         Items agotados o inactivos se quitan (la tienda tampoco los vende). */
+      sincronizarConCatalogo: (productos) => {
+        if (!Array.isArray(productos) || productos.length === 0) return
+        set(s => ({
+          items: s.items
+            .filter(i => {
+              const p = productos.find(x => x.id === i.productoId)
+              return !p || (p.activo !== false && p.stock > 0)
+            })
+            .map(i => {
+              const p = productos.find(x => x.id === i.productoId)
+              if (!p) return i
+              return {
+                ...i,
+                nombre: p.nombre,
+                precioVenta: p.precioVenta,
+                precioCosto: p.precioCosto,
+                categoriaId: p.categoriaId || null,
+                stock: p.stock,
+                foto: fotoCapa(p) || i.foto || null,
+                posicion: posicionCapa(p.capa) || null,
+                cantidad: Math.min(i.cantidad, p.stock),
+              }
+            }),
+        }))
+      },
+
       cambiarCantidad: (productoId, cantidad) => {
         if (cantidad <= 0) {
           get().quitarDelCarrito(productoId)

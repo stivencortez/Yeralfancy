@@ -1,12 +1,17 @@
+import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Trash2, ShoppingBag, ArrowLeft } from 'lucide-react'
 import { useCarrito } from '../../store/useCarrito'
+import { useProductos } from '../../store/useProductos'
 import { formatearPrecio } from '../../utils/formatear'
 import { EstadoVacio } from '../../components/ui/Cargando'
 
 export default function Carrito() {
-  const { items, quitarDelCarrito, cambiarCantidad, getTotal, getTotalItems } = useCarrito()
+  const { items, quitarDelCarrito, cambiarCantidad, getTotal, getTotalItems, sincronizarConCatalogo } = useCarrito()
+  const productos = useProductos(s => s.productos)
   const navigate = useNavigate()
+
+  useEffect(() => { sincronizarConCatalogo(productos) }, [productos, sincronizarConCatalogo])
 
   if (!items.length) {
     return (
