@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Search, Package, Upload, X } from 'lucide-react'
+import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Search, Package, Upload, X, RotateCcw } from 'lucide-react'
 import { useProductos } from '../../store/useProductos'
 import { useCategorias } from '../../store/useCategorias'
 import { subirImagenProducto } from '../../lib/supabase'
@@ -15,27 +15,61 @@ const MAX_FOTOS = 5
 const LIMITE_MB = 12
 const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 
-function EditorCapa({ foto }) {
+function EditorCapa({ foto, capa, onCambio }) {
+  const contRef = useRef(null)
+  const dragRef = useRef(null)
+
+  const alPresionar = (e) => {
+    e.preventDefault()
+    dragRef.current = { px: e.clientX, py: e.clientY, x: capa.x ?? 50, y: capa.y ?? 50 }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  const alMover = (e) => {
+    if (!dragRef.current || !contRef.current) return
+    const rect = contRef.current.getBoundingClientRect()
+    const dx = ((e.clientX - dragRef.current.px) / rect.width) * 100
+    const dy = ((e.clientY - dragRef.current.py) / rect.height) * 100
+    onCambio({
+      ...capa,
+      zoom: 1,
+      x: Math.min(100, Math.max(0, dragRef.current.x - dx)),
+      y: Math.min(100, Math.max(0, dragRef.current.y - dy)),
+    })
+  }
+
+  const alSoltar = () => { dragRef.current = null }
+
   return (
     <div className="mt-3 p-3 bg-marca-beige/40 rounded-xl border border-marca-beige-borde">
-      <p className="text-xs font-medium text-marca-negro mb-2">Vista previa de la portada</p>
+      <p className="text-xs font-medium text-marca-negro mb-2">Ajustar portada — arrastra para centrar el producto</p>
       <div className="flex gap-3 items-start">
-        <div className="relative w-32 aspect-[2/3] shrink-0 rounded-[16px] overflow-hidden bg-marca-beige select-none">
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-cover bg-center scale-110 blur-xl opacity-60"
-            style={{ backgroundImage: `url(${imgSrc(foto, 48, 40)})` }}
-          />
+        <div
+          ref={contRef}
+          onPointerDown={alPresionar}
+          onPointerMove={alMover}
+          onPointerUp={alSoltar}
+          onPointerCancel={alSoltar}
+          className="relative w-32 aspect-[2/3] shrink-0 rounded-[16px] overflow-hidden bg-marca-beige cursor-move touch-none select-none"
+        >
           <img
             src={imgSrc(foto, 400)}
             alt=""
             draggable={false}
-            className="relative w-full h-full object-contain pointer-events-none"
+            className="w-full h-full object-cover pointer-events-none"
+            style={posicionCapa(capa) ? { objectPosition: posicionCapa(capa) } : undefined}
           />
         </div>
-        <p className="flex-1 min-w-0 text-[11px] text-marca-texto-suave">
-          Así se verá en el card de la tienda: la foto completa, sin recortes.
-        </p>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] text-marca-texto-suave mb-1.5">Así se verá en el card de la tienda.</p>
+          <button
+            type="button"
+            onClick={() => onCambio({ ...capa, zoom: 1, x: 50, y: 50 })}
+            className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-marca-texto-suave hover:text-marca-negro transition-colors"
+          >
+            <RotateCcw size={12} /> Restablecer
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -142,7 +176,11 @@ function SelectorFotosProducto({ fotos, onCambio, capa, onCambioCapa }) {
             ))}
           </div>
 
-          <EditorCapa foto={fotos[indiceCapa]} />
+          <EditorCapa
+            foto={fotos[indiceCapa]}
+            capa={{ ...CAPA_DEFAULT, ...(capa || {}), indice: indiceCapa }}
+            onCambio={onCambioCapa}
+          />
         </>
       )}
 
