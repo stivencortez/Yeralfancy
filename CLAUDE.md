@@ -32,6 +32,8 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 - As funções leem as credenciais nesta ordem: env vars `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` do Vercel (se existirem, têm prioridade) → tabela `config` via REST (cache de 60 s em `api/_telegram.js`).
 - Ordem de upload no cliente (`subirImagenConFallback`): 1º Telegram → 2º Supabase Storage → 3º data URL incrustada. Sem env vars configuradas, tudo segue funcionando via Storage.
 - O service worker cacheia `/api/imagen/*` (CacheFirst, 30 dias) e o `navigateFallbackDenylist` impede o SPA fallback de engolir `/api/`.
+- **Segurança**: o POST valida os bytes reais (só JPEG/PNG/WebP/GIF; SVG bloqueado por risco de XSS) e ignora o tipo declarado pelo cliente; o GET serve com `nosniff` + CSP.
+- **`file_id` é atado ao bot**: regenerar o token do mesmo bot é seguro; trocar para OUTRO bot exige baixar um respaldo antes e restaurá-lo depois (senão as imagens antigas morrem).
 
 ## Convenções
 

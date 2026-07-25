@@ -6,9 +6,10 @@
  */
 import { obtenerCredenciales } from '../_telegram.js'
 
+/* Solo imágenes rasterizadas — SVG excluido a propósito (riesgo de XSS) */
 const TIPOS = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
-  webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml',
+  webp: 'image/webp', gif: 'image/gif',
 }
 
 export default async function handler(req, res) {
@@ -40,6 +41,9 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', TIPOS[ext] || 'application/octet-stream')
     res.setHeader('Content-Length', String(buffer.length))
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
+    res.setHeader('X-Content-Type-Options', 'nosniff')
+    res.setHeader('Content-Security-Policy', "default-src 'none'")
+    if (!TIPOS[ext]) res.setHeader('Content-Disposition', 'attachment')
     return res.status(200).send(buffer)
   } catch (e) {
     return res.status(502).json({ error: e.message })

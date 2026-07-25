@@ -20,6 +20,24 @@ async function leerCuerpo(req) {
   return Buffer.concat(trozos)
 }
 
+/* Detecta el tipo real por los bytes (magic numbers). Solo se aceptan
+   imágenes rasterizadas; SVG queda excluido a propósito (riesgo de XSS). */
+function detectarImagen(buf) {
+  if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+    return { ext: 'jpg', tipo: 'image/jpeg' }
+  }
+  if (buf.length > 7 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+    return { ext: 'png', tipo: 'image/png' }
+  }
+  if (buf.length > 11 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') {
+    return { ext: 'webp', tipo: 'image/webp' }
+  }
+  if (buf.length > 5 && (buf.toString('ascii', 0, 6) === 'GIF87a' || buf.toString('ascii', 0, 6) === 'GIF89a')) {
+    return { ext: 'gif', tipo: 'image/gif' }
+  }
+  return null
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -36,14 +54,21 @@ export default async function handler(req, res) {
     if (!buffer.length) return res.status(400).json({ error: 'Cuerpo vacío' })
     if (buffer.length > MAX_BYTES) return res.status(413).json({ error: 'Imagen demasiado grande' })
 
-    const tipo = req.headers['x-tipo'] || 'image/jpeg'
-    const nombre = String(req.headers['x-nombre'] || `imagen_${Date.now()}.jpg`).replace(/[^\w.\-]/g, '_').slice(0, 80)
+    // El tipo lo deciden los BYTES, nunca los headers del cliente
+    const img = detectarImagen(buffer)
+    if (!img) return res.status(415).json({ error: 'Solo se aceptan imágenes JPEG, PNG, WebP o GIF' })
+
+    const base = String(req.headers['x-nombre'] || `imagen_${Date.now()}`)
+      .replace(/\.[^.]*$/, '')
+      .replace(/[^\w\-]/g, '_')
+      .slice(0, 60) || `imagen_${Date.now()}`
+    const nombre = `${base}.${img.ext}`
 
     // sendDocument conserva los bytes originales (sin recompresión de Telegram)
     const form = new FormData()
     form.append('chat_id', chatId)
     form.append('disable_notification', 'true')
-    form.append('document', new Blob([buffer], { type: tipo }), nombre)
+    form.append('document', new Blob([buffer], { type: img.tipo }), nombre)
 
     const r = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, { method: 'POST', body: form })
     const json = await r.json()

@@ -223,6 +223,10 @@ export default function Telegram() {
         <p className="text-[11px] text-marca-texto-suave">
           El token queda guardado en tu base de Supabase y solo lo usan las funciones del sitio. Si algún día prefieres el modo más seguro, define <span className="font-mono">TELEGRAM_BOT_TOKEN</span> y <span className="font-mono">TELEGRAM_CHAT_ID</span> en Vercel: tienen prioridad.
         </p>
+        <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-[11px] rounded-xl px-3 py-2.5">
+          <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+          <span><strong>Importante:</strong> las imágenes ya subidas solo funcionan con este mismo bot. Regenerar el token del <em>mismo</em> bot es seguro, pero si cambias a <em>otro</em> bot, descarga antes un respaldo y restáuralo después del cambio para no perder las fotos.</span>
+        </div>
       </div>
 
       {/* Resultado de la prueba */}
