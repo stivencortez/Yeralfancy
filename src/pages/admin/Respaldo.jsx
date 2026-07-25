@@ -49,6 +49,33 @@ function tipoDeNombre(nombre) {
   return { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml' }[ext] || 'application/octet-stream'
 }
 
+function extensionDeTipo(tipo) {
+  return { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'image/svg+xml': 'svg' }[tipo] || 'jpg'
+}
+
+/* Convierte una data URL (imagen incrustada en la base) en Blob */
+function blobDeDataUrl(dataUrl) {
+  const [cabecera, base64] = dataUrl.split(',')
+  const tipo = cabecera.match(/data:(.*?);/)?.[1] || 'image/jpeg'
+  const bin = atob(base64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return new Blob([bytes], { type: tipo })
+}
+
+/* Descarga una imagen del Storage: primero via API de Supabase y,
+   si falla, con fetch directo a la URL pública */
+async function descargarImagen(url, ruta) {
+  try {
+    const { data, error } = await supabase.storage.from(ruta.bucket).download(ruta.nombre)
+    if (error) throw error
+    if (data) return data
+  } catch { /* intenta con fetch */ }
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return res.blob()
+}
+
 export default function Respaldo() {
   const toast = useAdminToast()
   const inputRef = useRef(null)
@@ -74,26 +101,28 @@ export default function Respaldo() {
         tablas[t] = data || []
       }
 
-      // 2. Reunir todas las URLs de imágenes del Storage
+      // 2. Reunir todas las imágenes: URLs del Storage y también las
+      //    incrustadas en la base (data URLs)
       const urls = new Set()
+      const incrustadas = new Set()
       recorrerStrings(tablas, s => {
         if (s.includes(MARCA_STORAGE)) urls.add(s)
+        else if (s.startsWith('data:image/')) incrustadas.add(s)
         return s
       })
 
-      // 3. Descargar cada imagen al zip
+      // 3. Descargar cada imagen del Storage al zip
       const zip = new JSZip()
       const mapa = {}
+      const total = urls.size + incrustadas.size
       let n = 0, fallidas = 0
       for (const url of urls) {
         n += 1
-        setProgreso(`Descargando imagen ${n} de ${urls.size}...`)
+        setProgreso(`Guardando imagen ${n} de ${total}...`)
         const ruta = rutaDeUrl(url)
         if (!ruta) continue
         try {
-          const res = await fetch(url)
-          if (!res.ok) throw new Error(`HTTP ${res.status}`)
-          const blob = await res.blob()
+          const blob = await descargarImagen(url, ruta)
           const archivo = `imagenes/${ruta.bucket}/${ruta.nombre}`
           zip.file(archivo, blob)
           mapa[url] = { archivo, bucket: ruta.bucket, nombre: ruta.nombre }
@@ -103,7 +132,24 @@ export default function Respaldo() {
         }
       }
 
-      // 4. Armar el JSON y descargar el zip
+      // 4. Guardar también las imágenes incrustadas como archivos visibles.
+      //    (Siguen dentro del JSON para la restauración; esto es para que
+      //    todas las fotos estén disponibles como archivos en el zip.)
+      let e = 0
+      for (const dataUrl of incrustadas) {
+        n += 1
+        e += 1
+        setProgreso(`Guardando imagen ${n} de ${total}...`)
+        try {
+          const blob = blobDeDataUrl(dataUrl)
+          zip.file(`imagenes/incrustadas/img_${String(e).padStart(3, '0')}.${extensionDeTipo(blob.type)}`, blob)
+        } catch (err) {
+          fallidas += 1
+          console.warn('[Respaldo] Imagen incrustada ilegible', err)
+        }
+      }
+
+      // 5. Armar el JSON y descargar el zip
       setProgreso('Comprimiendo respaldo...')
       const json = {
         version: VERSION_RESPALDO,
@@ -122,9 +168,10 @@ export default function Respaldo() {
       URL.revokeObjectURL(a.href)
 
       const filas = Object.values(tablas).reduce((acc, rows) => acc + rows.length, 0)
+      const totalImg = Object.keys(mapa).length + incrustadas.size
       setResumen({
         tipo: 'exportar',
-        texto: `Respaldo creado: ${filas} registros en ${Object.keys(tablas).length} tablas y ${Object.keys(mapa).length} imágenes.${fallidas ? ` (${fallidas} imágenes no se pudieron descargar)` : ''}`,
+        texto: `Respaldo creado: ${filas} registros en ${Object.keys(tablas).length} tablas y ${totalImg} imágenes (carpeta "imagenes" del zip).${fallidas ? ` (${fallidas} imágenes no se pudieron guardar)` : ''}`,
       })
       toast('Respaldo descargado', 'exito')
     } catch (e) {
