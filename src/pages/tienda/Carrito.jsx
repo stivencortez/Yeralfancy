@@ -40,7 +40,7 @@ export default function Carrito() {
           <div key={item.productoId} className="bg-white rounded-2xl p-3 flex gap-3 shadow-tarjeta animate-slide-up">
             <div className="w-20 h-20 rounded-xl overflow-hidden bg-marca-beige shrink-0">
               {item.foto ? (
-                <img src={item.foto} alt={item.nombre} className="w-full h-full object-cover" />
+                <img src={item.foto} alt={item.nombre} className="w-full h-full object-cover" style={item.posicion ? { objectPosition: item.posicion } : undefined} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <ShoppingBag size={20} className="text-marca-beige-borde" />

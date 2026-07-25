@@ -128,7 +128,7 @@ export default function Pedidos() {
               <div className="space-y-2">
                 {pedidoDetalle.productos.map((prod, i) => (
                   <div key={i} className="flex items-center gap-3 py-2 border-b border-marca-beige-borde last:border-0">
-                    {prod.foto && <img src={prod.foto} alt="" className="w-10 h-10 rounded-lg object-cover bg-marca-beige shrink-0" />}
+                    {prod.foto && <img src={prod.foto} alt="" className="w-10 h-10 rounded-lg object-cover bg-marca-beige shrink-0" style={prod.posicion ? { objectPosition: prod.posicion } : undefined} />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-marca-negro truncate">{prod.nombre}</p>
                       <p className="text-xs text-marca-texto-suave">Cant: {prod.cantidad} · {formatearPrecio(prod.precioVenta)} c/u</p>

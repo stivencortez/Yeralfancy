@@ -5,6 +5,7 @@ import { useCategorias } from '../../store/useCategorias'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { formatearPrecio } from '../../utils/formatear'
+import { imgSrc, fotoCapa, posicionCapa } from '../../utils/imagen'
 
 export default function Inventario() {
   const { productos, actualizarStock } = useProductos()
@@ -102,7 +103,7 @@ export default function Inventario() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg overflow-hidden bg-marca-beige shrink-0">
-                            {p.fotos?.[0] ? <img src={p.fotos[0]} alt="" className="w-full h-full object-cover" /> : <Package size={12} className="text-marca-beige-borde m-auto mt-2" />}
+                            {fotoCapa(p) ? <img src={imgSrc(fotoCapa(p), 100)} alt="" className="w-full h-full object-cover" style={posicionCapa(p.capa) ? { objectPosition: posicionCapa(p.capa) } : undefined} /> : <Package size={12} className="text-marca-beige-borde m-auto mt-2" />}
                           </div>
                           <div>
                             <p className="font-medium text-marca-negro text-xs">{p.nombre}</p>

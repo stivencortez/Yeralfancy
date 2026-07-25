@@ -148,7 +148,7 @@ export default function Checkout() {
           {items.map(item => (
             <div key={item.productoId} className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl overflow-hidden bg-marca-beige shrink-0">
-                {item.foto && <img src={item.foto} alt={item.nombre} className="w-full h-full object-cover" />}
+                {item.foto && <img src={item.foto} alt={item.nombre} className="w-full h-full object-cover" style={item.posicion ? { objectPosition: item.posicion } : undefined} />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-marca-negro truncate">{item.nombre}</p>

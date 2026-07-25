@@ -27,3 +27,4 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 - Cards de produto usam imagem em **2:3 (`aspect-[2/3]`) com `object-cover`**: a foto preenche o card, sem faixas laterais.
 - O card respeita o **ponto central** salvo em `producto.capa` (via `posicionCapa`, só `objectPosition`) — o dono ajusta o enquadramento por produto no admin ("portada": arrastar para centrar).
 - O editor de portada do admin tem prévia em **2:3 sem zoom**, idêntica ao card da loja (`estiloCapa` foi removido; nunca reintroduzir zoom/escala em cards).
+- **Toda** miniatura/imagem de produto (inventário, carrinho, checkout, pedidos, tabela do admin) segue a mesma lógica do card: `fotoCapa` + `object-cover` + ponto central de `posicionCapa` (o carrinho persiste `posicion` no item).
