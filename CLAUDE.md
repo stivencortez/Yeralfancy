@@ -21,6 +21,7 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 - `src/lib/supabase.js` — cliente Supabase e mapeadores DB↔app.
 - `src/utils/imagen.js` — helpers de imagem (`imgSrc`, `fotoCapa`).
 - Build: `npm run build` (Vite → `dist/`).
+- `src/pages/admin/Respaldo.jsx` — backup completo (`/admin/respaldo`): exporta um .zip com todas as tabelas + imagens do Storage e restaura a partir dele (upsert; reescreve URLs de imagem).
 
 ## Convenções
 

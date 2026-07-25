@@ -28,6 +28,7 @@ import Configuracion from './pages/admin/Configuracion'
 import PWAIntro from './pages/admin/PWAIntro'
 import ImportarExcel from './pages/admin/ImportarExcel'
 import Cupones from './pages/admin/Cupones'
+import Respaldo from './pages/admin/Respaldo'
 
 export default function App() {
   return (
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="configuracion" element={<Configuracion />} />
           <Route path="importar-excel" element={<ImportarExcel />} />
           <Route path="cupones" element={<Cupones />} />
+          <Route path="respaldo" element={<Respaldo />} />
         </Route>
       </Routes>
     </>
