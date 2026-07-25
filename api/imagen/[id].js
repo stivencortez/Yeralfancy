@@ -9,7 +9,7 @@ const TIPOS = {
   webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml',
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return res.status(405).json({ error: 'Método no permitido' })
