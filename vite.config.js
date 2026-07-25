@@ -14,7 +14,17 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
+          {
+            urlPattern: /\/api\/imagen\/.+/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'imagenes-telegram',
+              expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             urlPattern: /^https:\/\/picsum\.photos\/.*/i,
             handler: 'CacheFirst',

@@ -21,7 +21,16 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 - `src/lib/supabase.js` — cliente Supabase e mapeadores DB↔app.
 - `src/utils/imagen.js` — helpers de imagem (`imgSrc`, `fotoCapa`).
 - Build: `npm run build` (Vite → `dist/`).
-- `src/pages/admin/Respaldo.jsx` — backup completo (`/admin/respaldo`): exporta um .zip com todas as tabelas + imagens do Storage e restaura a partir dele (upsert; reescreve URLs de imagem).
+- `src/pages/admin/Respaldo.jsx` — backup completo (`/admin/respaldo`): exporta um .zip com todas as tabelas + imagens (Storage, Telegram e incrustadas) e restaura a partir dele (upsert; reescreve URLs de imagem).
+
+## Imagens no Telegram (mídia fora do banco)
+
+- Preferência do dono: **toda mídia vive no Telegram**; o banco guarda só texto (URLs `/api/imagen/<file_id>`).
+- `api/imagen/index.js` (POST) — recebe a imagem e envia via bot a um canal privado (`sendDocument`); devolve `/api/imagen/<file_id>`.
+- `api/imagen/[id].js` (GET) — proxy: resolve `getFile` e serve os bytes com cache imutável do CDN Vercel. O token do bot **nunca** chega ao navegador.
+- Env vars no painel do Vercel: `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` (canal `-100...` com o bot como admin).
+- Ordem de upload no cliente (`subirImagenConFallback`): 1º Telegram → 2º Supabase Storage → 3º data URL incrustada. Sem env vars configuradas, tudo segue funcionando via Storage.
+- O service worker cacheia `/api/imagen/*` (CacheFirst, 30 dias) e o `navigateFallbackDenylist` impede o SPA fallback de engolir `/api/`.
 
 ## Convenções
 

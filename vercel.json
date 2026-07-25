@@ -3,6 +3,8 @@
   "outputDirectory": "dist",
   "routes": [
     { "handle": "filesystem" },
+    { "src": "/api/imagen/(.*)", "dest": "/api/imagen/[id].js?id=$1" },
+    { "src": "/api/imagen", "dest": "/api/imagen/index.js" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

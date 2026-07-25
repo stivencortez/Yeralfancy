@@ -148,6 +148,24 @@ const procesarImagenEnCanvas = (archivo, maxLado, calidad, modo, maxBytes) => ne
   reader.readAsDataURL(archivo)
 })
 
+/* Sube la imagen al canal de Telegram vía la función /api/imagen.
+   Devuelve la URL del proxy (/api/imagen/<file_id>) o lanza error. */
+export const subirImagenTelegram = async (blob, nombre) => {
+  const res = await fetch('/api/imagen', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'X-Tipo': blob.type || 'image/jpeg',
+      'X-Nombre': nombre,
+    },
+    body: blob,
+  })
+  if (!res.ok) throw new Error(`Telegram HTTP ${res.status}`)
+  const json = await res.json()
+  if (!json?.url) throw new Error('Respuesta inválida de /api/imagen')
+  return json.url
+}
+
 const subirImagenConFallback = async (archivo, bucket, prefijo, opciones = {}) => {
   const { maxLado = 1200, calidad = 0.82, maxBytes = MAX_BYTES } = opciones
 
@@ -159,6 +177,15 @@ const subirImagenConFallback = async (archivo, bucket, prefijo, opciones = {}) =
   }
 
   const nombre = `${prefijo}_${Date.now()}.jpg`
+
+  // 1. Telegram: la media vive fuera de la base de datos
+  try {
+    return await subirImagenTelegram(blob, nombre)
+  } catch (e) {
+    console.warn('[imagenes] Telegram no disponible, usando Storage:', e.message)
+  }
+
+  // 2. Supabase Storage
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(nombre, blob, { upsert: false, contentType: 'image/jpeg' })
@@ -168,6 +195,7 @@ const subirImagenConFallback = async (archivo, bucket, prefijo, opciones = {}) =
     return pub.publicUrl
   }
 
+  // 3. Último recurso: incrustada en la base
   return procesarImagenEnCanvas(archivo, maxLado, calidad, 'dataurl')
 }
 

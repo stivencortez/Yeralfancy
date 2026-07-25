@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import JSZip from 'jszip'
 import { Database, Download, Upload, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { supabase, subirImagenTelegram } from '../../lib/supabase'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 
 /* Tablas incluidas en el respaldo, en orden seguro de restauración
@@ -19,6 +19,7 @@ const TABLAS = [
 ]
 
 const MARCA_STORAGE = '/storage/v1/object/public/'
+const MARCA_TELEGRAM = '/api/imagen/'
 const VERSION_RESPALDO = 1
 const TAM_LOTE = 200
 
@@ -101,12 +102,14 @@ export default function Respaldo() {
         tablas[t] = data || []
       }
 
-      // 2. Reunir todas las imágenes: URLs del Storage y también las
-      //    incrustadas en la base (data URLs)
+      // 2. Reunir todas las imágenes: URLs del Storage, del archivo de
+      //    Telegram (/api/imagen/...) y las incrustadas en la base (data URLs)
       const urls = new Set()
+      const telegram = new Set()
       const incrustadas = new Set()
       recorrerStrings(tablas, s => {
         if (s.includes(MARCA_STORAGE)) urls.add(s)
+        else if (s.startsWith(MARCA_TELEGRAM)) telegram.add(s)
         else if (s.startsWith('data:image/')) incrustadas.add(s)
         return s
       })
@@ -114,7 +117,7 @@ export default function Respaldo() {
       // 3. Descargar cada imagen del Storage al zip
       const zip = new JSZip()
       const mapa = {}
-      const total = urls.size + incrustadas.size
+      const total = urls.size + telegram.size + incrustadas.size
       let n = 0, fallidas = 0
       for (const url of urls) {
         n += 1
@@ -132,7 +135,26 @@ export default function Respaldo() {
         }
       }
 
-      // 4. Guardar también las imágenes incrustadas como archivos visibles.
+      // 4. Descargar las imágenes archivadas en Telegram (vía el proxy)
+      let tgN = 0
+      for (const url of telegram) {
+        n += 1
+        tgN += 1
+        setProgreso(`Guardando imagen ${n} de ${total}...`)
+        try {
+          const res = await fetch(url)
+          if (!res.ok) throw new Error(`HTTP ${res.status}`)
+          const blob = await res.blob()
+          const archivo = `imagenes/telegram/img_${String(tgN).padStart(3, '0')}.${extensionDeTipo(blob.type)}`
+          zip.file(archivo, blob)
+          mapa[url] = { archivo, telegram: true, nombre: archivo.split('/').pop() }
+        } catch (e) {
+          fallidas += 1
+          console.warn('[Respaldo] No se pudo descargar de Telegram', url, e)
+        }
+      }
+
+      // 5. Guardar también las imágenes incrustadas como archivos visibles.
       //    (Siguen dentro del JSON para la restauración; esto es para que
       //    todas las fotos estén disponibles como archivos en el zip.)
       let e = 0
@@ -149,7 +171,7 @@ export default function Respaldo() {
         }
       }
 
-      // 5. Armar el JSON y descargar el zip
+      // 6. Armar el JSON y descargar el zip
       setProgreso('Comprimiendo respaldo...')
       const json = {
         version: VERSION_RESPALDO,
@@ -212,12 +234,21 @@ export default function Respaldo() {
         if (!f) { imgFallidas += 1; continue }
         try {
           const blob = await f.async('blob')
-          const { error } = await supabase.storage
-            .from(info.bucket)
-            .upload(info.nombre, blob, { upsert: true, contentType: tipoDeNombre(info.nombre) })
-          if (error && !`${error.message}`.toLowerCase().includes('exists')) throw error
-          const { data: pub } = supabase.storage.from(info.bucket).getPublicUrl(info.nombre)
-          if (pub?.publicUrl) reemplazos[urlVieja] = pub.publicUrl
+          if (info.telegram) {
+            // Imagen archivada en Telegram: se vuelve a subir vía /api/imagen
+            const nueva = await subirImagenTelegram(
+              new Blob([blob], { type: tipoDeNombre(info.nombre) }),
+              info.nombre
+            )
+            reemplazos[urlVieja] = nueva
+          } else {
+            const { error } = await supabase.storage
+              .from(info.bucket)
+              .upload(info.nombre, blob, { upsert: true, contentType: tipoDeNombre(info.nombre) })
+            if (error && !`${error.message}`.toLowerCase().includes('exists')) throw error
+            const { data: pub } = supabase.storage.from(info.bucket).getPublicUrl(info.nombre)
+            if (pub?.publicUrl) reemplazos[urlVieja] = pub.publicUrl
+          }
         } catch (e) {
           imgFallidas += 1
           console.warn('[Respaldo] No se pudo subir', info.archivo, e)
