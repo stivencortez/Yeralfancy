@@ -4,6 +4,8 @@
  * cache agresivo del CDN de Vercel (Telegram casi nunca se consulta).
  * El token del bot nunca llega al navegador.
  */
+import { obtenerCredenciales } from '../_telegram.js'
+
 const TIPOS = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
   webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml',
@@ -15,8 +17,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' })
   }
 
-  const token = process.env.TELEGRAM_BOT_TOKEN
-  if (!token) return res.status(501).json({ error: 'Telegram no configurado' })
+  const cred = await obtenerCredenciales()
+  if (!cred) return res.status(501).json({ error: 'Telegram no configurado' })
+  const token = cred.token
 
   const id = req.query.id
   if (!id || !/^[\w-]{10,200}$/.test(id)) return res.status(400).json({ error: 'Identificador inválido' })

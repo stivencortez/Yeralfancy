@@ -28,7 +28,8 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 - Preferência do dono: **toda mídia vive no Telegram**; o banco guarda só texto (URLs `/api/imagen/<file_id>`).
 - `api/imagen/index.js` (POST) — recebe a imagem e envia via bot a um canal privado (`sendDocument`); devolve `/api/imagen/<file_id>`.
 - `api/imagen/[id].js` (GET) — proxy: resolve `getFile` e serve os bytes com cache imutável do CDN Vercel. O token do bot **nunca** chega ao navegador.
-- Env vars no painel do Vercel: `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` (canal `-100...` com o bot como admin).
+- Configuração **visual em `/admin/telegram`** (menu Sistema): token e ID do canal salvos nas colunas `telegram_token`/`telegram_chat` da tabela `config` (migração 007); a página tem guia, busca automática do ID e teste de conexão.
+- As funções leem as credenciais nesta ordem: env vars `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` do Vercel (se existirem, têm prioridade) → tabela `config` via REST (cache de 60 s em `api/_telegram.js`).
 - Ordem de upload no cliente (`subirImagenConFallback`): 1º Telegram → 2º Supabase Storage → 3º data URL incrustada. Sem env vars configuradas, tudo segue funcionando via Storage.
 - O service worker cacheia `/api/imagen/*` (CacheFirst, 30 dias) e o `navigateFallbackDenylist` impede o SPA fallback de engolir `/api/`.
 

@@ -6,6 +6,8 @@
  *   TELEGRAM_BOT_TOKEN — token del bot (@BotFather)
  *   TELEGRAM_CHAT_ID   — id del canal privado (-100...) donde se archivan
  */
+import { obtenerCredenciales } from '../_telegram.js'
+
 const MAX_BYTES = 4 * 1024 * 1024 // límite de payload de Vercel (~4.5 MB)
 
 async function leerCuerpo(req) {
@@ -25,9 +27,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' })
 
-  const token = process.env.TELEGRAM_BOT_TOKEN
-  const chatId = process.env.TELEGRAM_CHAT_ID
-  if (!token || !chatId) return res.status(501).json({ error: 'Telegram no configurado' })
+  const cred = await obtenerCredenciales()
+  if (!cred) return res.status(501).json({ error: 'Telegram no configurado' })
+  const { token, chatId } = cred
 
   try {
     const buffer = await leerCuerpo(req)

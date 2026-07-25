@@ -29,6 +29,7 @@ import PWAIntro from './pages/admin/PWAIntro'
 import ImportarExcel from './pages/admin/ImportarExcel'
 import Cupones from './pages/admin/Cupones'
 import Respaldo from './pages/admin/Respaldo'
+import Telegram from './pages/admin/Telegram'
 
 export default function App() {
   return (
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="importar-excel" element={<ImportarExcel />} />
           <Route path="cupones" element={<Cupones />} />
           <Route path="respaldo" element={<Respaldo />} />
+          <Route path="telegram" element={<Telegram />} />
         </Route>
       </Routes>
     </>
