@@ -46,7 +46,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
               src={imgSrc(fotoPortada, 400, 80)}
               alt={producto.nombre}
               style={posicionPortada ? { objectPosition: posicionPortada } : undefined}
-              className={`w-full h-full object-cover transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
+              className={`w-full h-full object-contain transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
               onLoad={() => setImgCargada(true)}
