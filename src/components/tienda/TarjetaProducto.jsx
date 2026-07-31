@@ -35,7 +35,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
     <Link to={`/producto/${producto.id}`} className="block group">
       <div className="bg-[#F8F6F2] rounded-[20px] overflow-hidden transition-all duration-300 active:scale-[0.97]">
         {/* Imagen */}
-        <div className="relative aspect-[2/3] overflow-hidden bg-marca-beige">
+        <div className="relative aspect-square overflow-hidden bg-marca-beige">
           {/* Skeleton */}
           {!imgCargada && fotoPortada && (
             <div className="absolute inset-0 bg-marca-beige animate-pulse" />

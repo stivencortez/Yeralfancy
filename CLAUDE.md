@@ -37,8 +37,7 @@ Preferência do dono: **toda nova implementação deve ser versionada e publicad
 
 ## Convenções
 
-- Cards de produto: **2:3 (`aspect-[2/3]`) com `object-cover`** — o card fica **100% preenchido** pela foto; o corte acontece **em cima/embaixo**, nunca deve sobrar faixa vazia. Preferência explícita do dono.
+- Cards de produto: **1:1 (`aspect-square`) com `object-cover`** — o dono prefere que a imagem não tenha muito zoom/corte nas laterais, portanto os cards de produto são quadrados.
 - O card respeita o **ponto central** salvo em `producto.capa` (via `posicionCapa`, só `objectPosition`) — o dono arrasta a foto no admin ("Ajustar portada") para escolher qual faixa aparece.
-- A prévia do editor de portada é **2:3 sem zoom, idêntica ao card** (`estiloCapa`/zoom foram removidos; nunca reintroduzir zoom/escala nem `object-contain` com faixas nos cards).
-- Enquadramentos antigos salvos com `zoom > 1` são ignorados (caem no centro) — ver `posicionCapa`.
+- A prévia do editor de portada é **1:1 sem zoom, idêntica ao card**.
 - Toda miniatura de produto (inventário, carrinho, checkout, pedidos, tabela do admin) segue a mesma lógica: `fotoCapa` + `object-cover` + `posicionCapa` (o carrinho persiste `posicion` no item).
