@@ -4,7 +4,7 @@ import { useConfig } from '../../store/useConfig'
 import {
   LayoutDashboard, Package, Tag, Warehouse, ShoppingCart,
   Image, Users, BarChart2, Settings, LogOut, Globe,
-  ChevronLeft, ChevronRight, Sun, Moon, Smartphone, FileSpreadsheet, Ticket, Database, Send,
+  ChevronLeft, ChevronRight, Sun, Moon, Smartphone, FileSpreadsheet, Ticket, Database, Send, RefreshCw,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -39,9 +39,10 @@ const GRUPOS = [
   {
     titulo: 'Sistema',
     items: [
-      { a: '/admin/configuracion', icono: Settings, etiqueta: 'Configuración' },
-      { a: '/admin/respaldo',      icono: Database, etiqueta: 'Respaldo' },
-      { a: '/admin/telegram',      icono: Send,     etiqueta: 'Telegram' },
+      { a: '/admin/configuracion',    icono: Settings,  etiqueta: 'Configuración' },
+      { a: '/admin/respaldo',          icono: Database,  etiqueta: 'Respaldo' },
+      { a: '/admin/telegram',          icono: Send,      etiqueta: 'Telegram' },
+      { a: '/admin/migrar-imagenes',   icono: RefreshCw, etiqueta: 'Migrar imágenes' },
     ],
   },
 ]
