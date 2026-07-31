@@ -50,7 +50,7 @@ function EditorCapa({ foto, capa, onCambio }) {
           onPointerMove={alMover}
           onPointerUp={alSoltar}
           onPointerCancel={alSoltar}
-          className="relative w-32 aspect-square shrink-0 rounded-[16px] overflow-hidden bg-marca-beige cursor-move touch-none select-none"
+          className="relative w-32 aspect-[3/4] shrink-0 rounded-[16px] overflow-hidden bg-marca-beige cursor-move touch-none select-none"
         >
           <img
             src={imgSrc(foto, 400)}
