@@ -25,11 +25,11 @@ function EditorCapa({ foto, capa, onCambio }) {
     if (!confirm('¿Aplicar este estilo de imagen (zoom/formato) a TODOS los productos del catálogo?')) return
     setAplicando(true)
     try {
-      const { data, error } = await supabase.from('productos').select('id, capa')
+      const { data, error } = await supabase.from('productos').select('*')
       if (error) throw error
 
       const payload = data.map(p => ({
-        id: p.id,
+        ...p,
         capa: {
           ...(p.capa || { indice: 0 }),
           fit: capa?.fit || 'contain',
