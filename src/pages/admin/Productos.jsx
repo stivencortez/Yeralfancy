@@ -2,11 +2,11 @@ import { useRef, useState } from 'react'
 import { Plus, Edit2, Trash2, Eye, EyeOff, Star, Search, Package, Upload, X, RotateCcw } from 'lucide-react'
 import { useProductos } from '../../store/useProductos'
 import { useCategorias } from '../../store/useCategorias'
-import { subirImagenProducto } from '../../lib/supabase'
+import { subirImagenProducto, supabase } from '../../lib/supabase'
 import { useAdminToast } from '../../layouts/LayoutAdmin'
 import { Modal } from '../../components/ui/Modal'
 import { formatearPrecio, calcularGanancia, calcularMargen, generarId } from '../../utils/formatear'
-import { imgSrc, posicionCapa, fotoCapa } from '../../utils/imagen'
+import { imgSrc, fotoCapa, estiloCapa } from '../../utils/imagen'
 import { EstadoVacio } from '../../components/ui/Cargando'
 
 const PRODUCTO_VACIO = { id: '', nombre: '', descripcion: '', categoriaId: '', precioCosto: '', precioVenta: '', stock: '', stockMinimo: '5', fotos: [], capa: null, destacado: false, activo: true }
@@ -18,6 +18,37 @@ const LIMITE_BYTES = LIMITE_MB * 1024 * 1024
 function EditorCapa({ foto, capa, onCambio }) {
   const contRef = useRef(null)
   const dragRef = useRef(null)
+  const [aplicando, setAplicando] = useState(false)
+  const toast = useAdminToast()
+
+  const aplicarATodos = async () => {
+    if (!confirm('¿Aplicar este estilo de imagen (zoom/formato) a TODOS los productos del catálogo?')) return
+    setAplicando(true)
+    try {
+      const { data, error } = await supabase.from('productos').select('id, capa')
+      if (error) throw error
+
+      const payload = data.map(p => ({
+        id: p.id,
+        capa: {
+          ...(p.capa || { indice: 0 }),
+          fit: capa?.fit || 'contain',
+          zoom: capa?.zoom || 1,
+          x: capa?.x ?? 50,
+          y: capa?.y ?? 50
+        }
+      }))
+
+      const { error: errUp } = await supabase.from('productos').upsert(payload)
+      if (errUp) throw errUp
+      
+      toast('¡Aplicado a todos los productos! Los cambios se verán al recargar.', 'exito')
+    } catch (e) {
+      toast('Error al aplicar a todos: ' + e.message, 'error')
+    } finally {
+      setAplicando(false)
+    }
+  }
 
   const alPresionar = (e) => {
     e.preventDefault()
@@ -56,20 +87,34 @@ function EditorCapa({ foto, capa, onCambio }) {
             src={imgSrc(foto, 400)}
             alt=""
             draggable={false}
-            className="w-full h-full object-cover pointer-events-none"
-            style={posicionCapa(capa) ? { objectPosition: posicionCapa(capa) } : undefined}
+            className={estiloCapa(capa).className + ' pointer-events-none'}
+            style={estiloCapa(capa).style}
           />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[11px] text-marca-texto-suave mb-1.5">Así se verá en el card de la tienda.</p>
-          <button
-            type="button"
-            onClick={() => onCambio({ ...capa, zoom: 1, x: 50, y: 50 })}
-            className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-marca-texto-suave hover:text-marca-negro transition-colors"
-          >
-            <RotateCcw size={12} /> Restablecer
-          </button>
+          <div className="flex flex-col gap-1 mt-2">
+            <button type="button" onClick={() => onCambio({ ...capa, fit: 'contain', zoom: 1, x: 50, y: 50 })} className={`text-left text-[11px] font-medium transition-colors ${capa?.fit === 'contain' ? 'text-marca-negro' : 'text-marca-texto-suave hover:text-marca-negro'}`}>
+              • Completo (sin recortes)
+            </button>
+            <button type="button" onClick={() => onCambio({ ...capa, fit: 'cover', zoom: 1, x: 50, y: 50 })} className={`text-left text-[11px] font-medium transition-colors ${capa?.fit === 'cover' && (capa?.zoom || 1) <= 1 ? 'text-marca-negro' : 'text-marca-texto-suave hover:text-marca-negro'}`}>
+              • Llenar área (recorta bordes)
+            </button>
+            <button type="button" onClick={() => onCambio({ ...capa, fit: 'cover', zoom: 1.25, x: 50, y: 50 })} className={`text-left text-[11px] font-medium transition-colors ${capa?.zoom > 1 ? 'text-marca-negro' : 'text-marca-texto-suave hover:text-marca-negro'}`}>
+              • Con Zoom (ideal dijes)
+            </button>
+          </div>
         </div>
+      </div>
+      <div className="mt-3 pt-3 border-t border-marca-beige-borde flex justify-end">
+        <button
+          type="button"
+          onClick={aplicarATodos}
+          disabled={aplicando}
+          className="text-[11px] font-semibold bg-marca-beige px-3 py-1.5 rounded-lg text-marca-negro hover:bg-marca-marron hover:text-white transition-colors disabled:opacity-50"
+        >
+          {aplicando ? 'Aplicando...' : 'Aplicar estilo a todas las imágenes'}
+        </button>
       </div>
     </div>
   )
@@ -370,7 +415,7 @@ export default function Productos() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl overflow-hidden bg-marca-beige shrink-0">
-                            {fotoCapa(p) ? <img src={fotoCapa(p)} alt="" className="w-full h-full object-cover" style={posicionCapa(p.capa) ? { objectPosition: posicionCapa(p.capa) } : undefined} /> : <Package size={16} className="text-marca-beige-borde m-auto mt-3" />}
+                            {fotoCapa(p) ? <img src={fotoCapa(p)} alt="" className={estiloCapa(p.capa).className} style={estiloCapa(p.capa).style} /> : <Package size={16} className="text-marca-beige-borde m-auto mt-3" />}
                           </div>
                           <div className="min-w-0">
                             <p className="font-medium text-marca-negro truncate max-w-[140px]">{p.nombre}</p>

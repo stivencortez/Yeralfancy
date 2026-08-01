@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useFavoritos } from '../../store/useFavoritos'
 import { useCategorias } from '../../store/useCategorias'
 import { formatearPrecio } from '../../utils/formatear'
-import { imgSrc, fotoCapa, posicionCapa } from '../../utils/imagen'
+import { imgSrc, fotoCapa, estiloCapa } from '../../utils/imagen'
 
 export function TarjetaProducto({ producto }) {
   const { toggleFavorito, esFavorito } = useFavoritos()
@@ -16,7 +16,7 @@ export function TarjetaProducto({ producto }) {
   const bajoStock = !sinStock && producto.stock <= producto.stockMinimo
   const [imgCargada, setImgCargada] = useState(false)
   const fotoPortada = fotoCapa(producto)
-  const posicionPortada = posicionCapa(producto.capa)
+  const estilos = estiloCapa(producto.capa, 'contain')
 
   const manejarFavorito = (e) => {
     e.preventDefault()
@@ -38,8 +38,8 @@ export function TarjetaProducto({ producto }) {
             <img
               src={imgSrc(fotoPortada, 400, 80)}
               alt={producto.nombre}
-              style={posicionPortada ? { objectPosition: posicionPortada } : undefined}
-              className={`w-full h-full object-contain transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
+              style={estilos.style}
+              className={`${estilos.className} transition-opacity duration-500 ${imgCargada ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
               decoding="async"
               onLoad={() => setImgCargada(true)}

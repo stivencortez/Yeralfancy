@@ -29,13 +29,34 @@ export function fotoCapa(producto) {
  */
 export function posicionCapa(capa) {
   if (!capa) return undefined
-  // Framings saved by the old editor (zoom > 1) point at the wrong region
-  // once the scale is dropped — ignore them and fall back to center.
   if ((Number(capa.zoom) || 1) !== 1) return undefined
   const x = clampPct(capa.x)
   const y = clampPct(capa.y)
   if (x === 50 && y === 50) return undefined
   return `${x}% ${y}%`
+}
+
+/**
+ * Retorna las clases y estilos inline necesarios para renderizar
+ * la imagen según las preferencias de fit y zoom guardadas en capa.
+ */
+export function estiloCapa(capa, defaultFit = 'contain') {
+  if (!capa) return { className: `w-full h-full object-${defaultFit}`, style: {} }
+  
+  const fit = capa.fit === 'cover' ? 'object-cover' : capa.fit === 'contain' ? 'object-contain' : `object-${defaultFit}`
+  const scale = (Number(capa.zoom) || 1) > 1 ? Number(capa.zoom) : 1
+  
+  const x = clampPct(capa.x)
+  const y = clampPct(capa.y)
+  const objectPosition = (x === 50 && y === 50) ? undefined : `${x}% ${y}%`
+  
+  return {
+    className: `w-full h-full ${fit}`,
+    style: {
+      objectPosition,
+      transform: scale > 1 ? `scale(${scale})` : undefined
+    }
+  }
 }
 
 function clampPct(v) {
