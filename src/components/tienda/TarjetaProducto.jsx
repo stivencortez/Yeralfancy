@@ -1,29 +1,22 @@
 import { useState } from 'react'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useCarrito } from '../../store/useCarrito'
 import { useFavoritos } from '../../store/useFavoritos'
+import { useCategorias } from '../../store/useCategorias'
 import { formatearPrecio } from '../../utils/formatear'
 import { imgSrc, fotoCapa, posicionCapa } from '../../utils/imagen'
 
-export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
-  const agregarAlCarrito = useCarrito(s => s.agregarAlCarrito)
+export function TarjetaProducto({ producto }) {
   const { toggleFavorito, esFavorito } = useFavoritos()
+  const getCategoria = useCategorias(s => s.getCategoria)
+  const categoria = getCategoria(producto.categoriaId)
+  
   const esFav = esFavorito(producto.id)
   const sinStock = producto.stock === 0
   const bajoStock = !sinStock && producto.stock <= producto.stockMinimo
   const [imgCargada, setImgCargada] = useState(false)
   const fotoPortada = fotoCapa(producto)
   const posicionPortada = posicionCapa(producto.capa)
-
-  const manejarAgregar = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!sinStock) {
-      agregarAlCarrito(producto)
-      onAgregarAlCarrito?.()
-    }
-  }
 
   const manejarFavorito = (e) => {
     e.preventDefault()
@@ -33,12 +26,12 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
 
   return (
     <Link to={`/producto/${producto.id}`} className="block group">
-      <div className="bg-[#F8F6F2] rounded-[20px] overflow-hidden transition-all duration-300 active:scale-[0.97]">
+      <div className="flex flex-col gap-2.5 transition-all duration-300 active:scale-[0.98]">
         {/* Imagen */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-marca-beige">
+        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-[#F8F6F2]">
           {/* Skeleton */}
           {!imgCargada && fotoPortada && (
-            <div className="absolute inset-0 bg-marca-beige animate-pulse" />
+            <div className="absolute inset-0 bg-[#F8F6F2] animate-pulse" />
           )}
 
           {fotoPortada ? (
@@ -52,7 +45,7 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
               onLoad={() => setImgCargada(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-marca-beige">
+            <div className="w-full h-full flex items-center justify-center bg-[#F8F6F2]">
               <ShoppingBag size={32} className="text-marca-beige-borde" />
             </div>
           )}
@@ -60,12 +53,11 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
           {/* Botón favorito */}
           <button
             onClick={manejarFavorito}
-            className={`absolute top-2.5 left-2.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-all duration-200
-              ${esFav ? 'bg-marca-negro' : 'bg-white/90 backdrop-blur-sm'}`}
+            className="absolute top-2.5 right-2.5 w-[30px] h-[30px] rounded-full bg-white flex items-center justify-center shadow-sm active:scale-90 transition-all duration-200"
           >
             <Heart
-              size={14}
-              className={esFav ? 'text-white fill-white' : 'text-marca-texto-suave'}
+              size={15}
+              className={esFav ? 'text-red-500 fill-red-500' : 'text-gray-400'}
               strokeWidth={esFav ? 0 : 2}
             />
           </button>
@@ -86,22 +78,14 @@ export function TarjetaProducto({ producto, onAgregarAlCarrito }) {
         </div>
 
         {/* Info */}
-        <div className="p-3">
-          <h3 className="text-sm font-semibold text-marca-negro leading-tight line-clamp-2 mb-2">{producto.nombre}</h3>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-marca-marron-oscuro">{formatearPrecio(producto.precioVenta)}</span>
-            <button
-              onClick={manejarAgregar}
-              disabled={sinStock}
-              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all active:scale-90 duration-150 ${
-                sinStock
-                  ? 'bg-marca-beige text-marca-texto-suave cursor-not-allowed'
-                  : 'bg-marca-negro text-white hover:bg-marca-marron-oscuro'
-              }`}
-            >
-              <ShoppingBag size={14} strokeWidth={2} />
-            </button>
-          </div>
+        <div className="flex flex-col px-1">
+          <h3 className="text-[13px] sm:text-sm font-bold text-marca-negro leading-tight line-clamp-1">{producto.nombre}</h3>
+          {categoria ? (
+            <p className="text-[11px] sm:text-xs text-marca-texto-suave mt-0.5">{categoria.nombre}</p>
+          ) : (
+            <p className="text-[11px] sm:text-xs text-marca-texto-suave mt-0.5 opacity-0">Sin categoría</p>
+          )}
+          <span className="text-[13px] sm:text-sm font-bold text-marca-negro mt-1.5">{formatearPrecio(producto.precioVenta)}</span>
         </div>
       </div>
     </Link>
