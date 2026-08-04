@@ -15,43 +15,6 @@ export default defineConfig({
         clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         navigateFallbackDenylist: [/^\/api\//],
-        runtimeCaching: [
-          {
-            // Imágenes de Supabase Storage — CacheFirst: tras la primera visita, cargan al instante
-            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'supabase-imagenes',
-              expiration: { maxEntries: 400, maxAgeSeconds: 30 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /\/api\/imagen\/.+/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'imagenes-telegram',
-              expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/picsum\.photos\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'picsum-images',
-              expiration: { maxEntries: 80, maxAgeSeconds: 7 * 24 * 60 * 60 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'unsplash-images',
-              expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 60 * 60 },
-            },
-          },
-        ],
       },
       manifest: {
         name: 'Yeral fancy',
