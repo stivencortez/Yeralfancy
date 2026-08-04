@@ -3,13 +3,11 @@
  * which serves a resized/compressed version via CDN.
  * Falls back to the original URL for non-Supabase images.
  */
-export function imgSrc(url, width = 800, quality = 80) {
+export function imgSrc(url, _width = 800, _quality = 80) {
   if (!url) return ''
-  if (!url.includes('/storage/v1/object/public/')) return url
-  return (
-    url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') +
-    `?width=${width}&quality=${quality}&resize=cover`
-  )
+  // Evitar /render/image/public/ porque en el plan gratuito de Supabase
+  // el límite es de 100 transformaciones/mes. Si se supera, las imágenes fallan (403).
+  return url
 }
 
 
