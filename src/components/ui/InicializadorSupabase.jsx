@@ -8,6 +8,7 @@ import { useConfig } from '../../store/useConfig'
 import { useAuth } from '../../store/useAuth'
 import { usePWAIntro } from '../../store/usePWAIntro'
 import { useCupones } from '../../store/useCupones'
+import { useApp } from '../../store/useApp'
 import { supabase } from '../../lib/supabase'
 
 const CLEANUP_KEY = 'yf-cleanup-ficticios-v1'
@@ -25,6 +26,7 @@ export default function InicializadorSupabase() {
   const sincAuth       = useAuth(s => s.sincronizarDesdeSupabase)
   const sincPWAIntro   = usePWAIntro(s => s.sincronizarDesdeSupabase)
   const sincCupones    = useCupones(s => s.sincronizarDesdeSupabase)
+  const setReady       = useApp(s => s.setReady)
 
   useEffect(() => {
     const inicializar = async () => {
@@ -42,7 +44,7 @@ export default function InicializadorSupabase() {
       }
       localStorage.removeItem('yf-pedidos')
 
-      // Sincronizar todos os stores com o Supabase
+      // Sincronizar datos críticos para la tienda en paralelo
       await Promise.allSettled([
         sincCategorias(),
         sincProductos(),
@@ -52,6 +54,12 @@ export default function InicializadorSupabase() {
         sincPWAIntro(),
         sincCupones(),
       ])
+
+      // Marcar la app como lista para que las páginas muestren los datos
+      // en lugar de mostrar el mensaje de "sin productos"
+      setReady()
+
+      // Pedidos y clientes son datos admin: se cargan sin bloquear la UI
       sincPedidos()
       sincClientes()
     }

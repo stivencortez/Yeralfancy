@@ -5,6 +5,42 @@ import { TarjetaProducto } from '../../components/tienda/TarjetaProducto'
 import { useTiendaToast } from '../../layouts/LayoutTienda'
 import { useProductos } from '../../store/useProductos'
 import { useCategorias } from '../../store/useCategorias'
+import { useApp } from '../../store/useApp'
+
+/* ─── Skeleton de carga para tarjetas de productos ─── */
+function SkeletonTarjeta() {
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="aspect-[3/4] rounded-2xl bg-[#F0EDE8] animate-pulse" />
+      <div className="flex flex-col px-1 gap-1.5">
+        <div className="h-3 w-3/4 bg-[#F0EDE8] rounded-full animate-pulse" />
+        <div className="h-2.5 w-1/2 bg-[#F0EDE8] rounded-full animate-pulse" />
+        <div className="h-3 w-1/3 bg-[#F0EDE8] rounded-full animate-pulse mt-0.5" />
+      </div>
+    </div>
+  )
+}
+
+/* ─── Sección de skeletons mientras carga ─── */
+function SkeletonSeccion({ titulo, cantidad = 4 }) {
+  return (
+    <section className="mb-7">
+      <div className="contenedor flex items-center justify-between mb-3">
+        <div className="h-4 w-36 bg-[#F0EDE8] rounded-full animate-pulse" />
+      </div>
+      <div className="contenedor grid grid-cols-2 gap-3 lg:hidden">
+        {Array.from({ length: cantidad }).map((_, i) => (
+          <SkeletonTarjeta key={i} />
+        ))}
+      </div>
+      <div className="contenedor hidden lg:grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <SkeletonTarjeta key={i} />
+        ))}
+      </div>
+    </section>
+  )
+}
 
 /* ─── Chips de categorías (mobile) — entre secciones de productos ─── */
 function CategoriasChips({ categorias }) {
@@ -51,7 +87,7 @@ function CategoriasGrid({ categorias }) {
           >
             <div className={`w-full aspect-square rounded-2xl overflow-hidden ${coloresBg[i % coloresBg.length]} transition-transform duration-200 group-hover:scale-105`}>
               {cat.imagen ? (
-                <img src={cat.imagen} alt={cat.nombre} className="w-full h-full object-cover" loading="lazy" />
+                <img src={cat.imagen} alt={cat.nombre} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl">💎</div>
               )}
@@ -111,8 +147,9 @@ function SeccionProductos({ titulo, productos, enlace, limite = 4 }) {
 
 /* ─── Página principal ─── */
 export default function Inicio() {
+  const isReady    = useApp(s => s.isReady)
   const categorias = useCategorias(s => s.getActivas())
-  const productos = useProductos(s => s.getProductosActivos())
+  const productos  = useProductos(s => s.getProductosActivos())
   const destacados = useProductos(s => s.getDestacados())
   const masVendidos = useProductos(s => s.getMasVendidos())
 
@@ -120,6 +157,9 @@ export default function Inicio() {
 
   /* Primera sección: destacados o nuevos como fallback */
   const primeraSeccion = destacados.length ? destacados : nuevos
+
+  /* Mientras los datos no llegaron de Supabase, mostramos skeletons */
+  const cargando = !isReady && !productos.length
 
   return (
     <div className="animate-fade-in">
@@ -129,50 +169,69 @@ export default function Inicio() {
         <CarruselBanners />
       </div>
 
-      {/* ── CHIPS DE CATEGORÍAS debajo del banner (solo mobile) ── */}
-      {categorias.length > 0 && <CategoriasChips categorias={categorias} />}
+      {/* ── Estado de carga: skeletons ── */}
+      {cargando ? (
+        <>
+          {/* Chips skeleton (mobile) */}
+          <div className="mb-6 lg:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-1 px-4" style={{ scrollbarWidth: 'none' }}>
+              {[80, 70, 90, 65, 75].map((w, i) => (
+                <div key={i} className={`shrink-0 h-9 rounded-full bg-[#F0EDE8] animate-pulse`} style={{ width: w }} />
+              ))}
+            </div>
+          </div>
+          <SkeletonSeccion titulo="Cargando..." cantidad={4} />
+          <SkeletonSeccion titulo="Cargando..." cantidad={4} />
+        </>
+      ) : (
+        <>
+          {/* ── CHIPS DE CATEGORÍAS debajo del banner (solo mobile) ── */}
+          {categorias.length > 0 && <CategoriasChips categorias={categorias} />}
 
-      {/* Grid de categorías — solo desktop */}
-      {categorias.length > 0 && <CategoriasGrid categorias={categorias} />}
+          {/* Grid de categorías — solo desktop */}
+          {categorias.length > 0 && <CategoriasGrid categorias={categorias} />}
 
-      {/* Primera sección de productos */}
-      {primeraSeccion.length > 0 && (
-        <SeccionProductos
-          titulo="Productos populares"
-          productos={primeraSeccion}
-          enlace="/categorias"
-          limite={4}
-        />
-      )}
+          {/* Primera sección de productos */}
+          {primeraSeccion.length > 0 && (
+            <SeccionProductos
+              titulo="Productos populares"
+              productos={primeraSeccion}
+              enlace="/categorias"
+              limite={4}
+            />
+          )}
 
-      {/* Segunda sección de productos */}
-      {masVendidos.length > 0 && (
-        <SeccionProductos
-          titulo="Más vendidos"
-          productos={masVendidos}
-          enlace="/categorias"
-          limite={4}
-        />
-      )}
+          {/* Segunda sección de productos */}
+          {masVendidos.length > 0 && (
+            <SeccionProductos
+              titulo="Más vendidos"
+              productos={masVendidos}
+              enlace="/categorias"
+              limite={4}
+            />
+          )}
 
-      {/* Tercera sección — nuevos (si hay contenido distinto) */}
-      {nuevos.length > 0 && nuevos !== primeraSeccion && (
-        <SeccionProductos
-          titulo="Nuevos accesorios"
-          productos={nuevos}
-          enlace="/categorias"
-          limite={4}
-        />
-      )}
+          {/* Tercera sección — nuevos (si hay contenido distinto) */}
+          {nuevos.length > 0 && nuevos !== primeraSeccion && (
+            <SeccionProductos
+              titulo="Nuevos accesorios"
+              productos={nuevos}
+              enlace="/categorias"
+              limite={4}
+            />
+          )}
 
-      {/* Estado vacío */}
-      {!productos.length && (
-        <div className="contenedor py-16 text-center">
-          <p className="text-4xl mb-4">✨</p>
-          <p className="font-semibold text-marca-negro">¡Próximamente!</p>
-          <p className="text-sm text-marca-texto-suave mt-1">Los productos estarán disponibles muy pronto.</p>
-        </div>
+          {/* Estado vacío — solo si YA cargó y no hay nada */}
+          {!productos.length && (
+            <div className="contenedor py-16 text-center">
+              <p className="text-4xl mb-4">✨</p>
+              <p className="font-semibold text-marca-negro">¡Próximamente!</p>
+              <p className="text-sm text-marca-texto-suave mt-1">Los productos estarán disponibles muy pronto.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
 }
+

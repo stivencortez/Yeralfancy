@@ -1,16 +1,22 @@
 /**
- * Converts a Supabase Storage URL to use the image render endpoint,
- * which serves a resized/compressed version via CDN.
- * Falls back to the original URL for non-Supabase images.
+ * Devuelve la URL de la imagen lista para usar.
+ *
+ * NOTA DE OPTIMIZACIÓN: La API de transformación de Supabase
+ * (/render/image/public/) es muy lenta en el plan gratuito y causaba
+ * que las imágenes tardaran varios segundos en cargar (o fallaran).
+ * Las imágenes ya se comprimen y redimensionan en el navegador antes
+ * de subirse (ver supabase.js), por lo que la URL original es suficiente.
+ *
+ * Si en el futuro se activa el plan Pro de Supabase, descomentar la
+ * línea con /render/image/public/ para habilitar el CDN de imágenes.
  */
-export function imgSrc(url, width = 800, quality = 80) {
+export function imgSrc(url, _width = 800, _quality = 80) {
   if (!url) return ''
-  if (!url.includes('/storage/v1/object/public/')) return url
-  return (
-    url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') +
-    `?width=${width}&quality=${quality}&resize=cover`
-  )
+  // Retorna la URL original directamente (ya está comprimida al subirse)
+  return url
+  // Pro plan: return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + `?width=${_width}&quality=${_quality}&resize=cover`
 }
+
 
 /**
  * Returns the URL of the product's cover photo (the one chosen in
