@@ -12,6 +12,14 @@ const TIPOS = {
   webp: 'image/webp', gif: 'image/gif',
 }
 
+function tipoPorBytes(b) {
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
+  if (b[0] === 0x89 && b.toString('latin1', 1, 4) === 'PNG') return 'image/png'
+  if (b.toString('latin1', 0, 3) === 'GIF') return 'image/gif'
+  if (b.toString('latin1', 0, 4) === 'RIFF' && b.toString('latin1', 8, 12) === 'WEBP') return 'image/webp'
+  return null
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -37,13 +45,15 @@ export default async function handler(req, res) {
 
     const buffer = Buffer.from(await archivo.arrayBuffer())
     const ext = (info.result.file_path.split('.').pop() || '').toLowerCase()
+    // sendDocument guarda archivos sin extensión de imagen: se detecta por los bytes reales
+    const tipo = tipoPorBytes(buffer) || TIPOS[ext]
 
-    res.setHeader('Content-Type', TIPOS[ext] || 'application/octet-stream')
+    res.setHeader('Content-Type', tipo || 'application/octet-stream')
     res.setHeader('Content-Length', String(buffer.length))
     res.setHeader('Cache-Control', 'public, max-age=31536000, s-maxage=31536000, immutable')
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('Content-Security-Policy', "default-src 'none'")
-    if (!TIPOS[ext]) res.setHeader('Content-Disposition', 'attachment')
+    if (!tipo) res.setHeader('Content-Disposition', 'attachment')
     return res.status(200).send(buffer)
   } catch (e) {
     return res.status(502).json({ error: e.message })
